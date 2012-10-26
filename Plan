@@ -1,0 +1,10 @@
+Jag vill göra en IRC-klient med GUI i swing.
+
+Vad det gäller uppdelning så följer jag mest klasstrukturen GUI Room Connection Listener Talker.
+
+Mitt första mål är ha ett GUI som kommer fungera bra för det jag vill göra. Tabbbar för varje rum.
+I varje rum ett fält där man skriver, en textruta för all text som kommer från servern och en lista
+på sidan med alla användare i kanalen.
+
+Kommer behöva lära mig java swing, att arbeta med sockets, irc-protokollet, formatera text. Få
+djupare förståelse för klassuppdelning och användning. Kanske trådar också.
