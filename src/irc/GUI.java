@@ -28,12 +28,12 @@ public class GUI extends JFrame {
 	JFrame frame;
 	JTabbedPane jtp;
 	JMenuBar menubar;
+	JMenu file;
 	Connection connection;
 	Listener listener;
 	Talker talker;
 	
 	public GUI() {
-		
 		
 	}
 	
@@ -58,7 +58,9 @@ public class GUI extends JFrame {
 						"Enter the room you want to join.\nIf the room has a password,\nput it after the room name,\nlike so: 'ROOM PASSWORD'\n ",
 						"Join Room",
 						JOptionPane.PLAIN_MESSAGE);
-		if (room != null) {
+		
+		// we make sure that the dialog wasnt cancelled and that there is at least one char in the textfield
+		if (room != null && !room.equals("")) {
 			if (!room.startsWith("#")) {
 				room = "#" + room;
 			}
@@ -70,13 +72,16 @@ public class GUI extends JFrame {
 				r = new Room(roomName, roomPwd, talker);
 			} else { r = new Room(room, talker); }
 			
-			talker.joinRoom(r);
+			// try to join room
 			rooms.add(r);
+			talker.joinRoom(r);
 		}
 	}
 	
+	// when the listener has heard that a room has been join by the client this function executes
 	public void addRoom(Room room) {
 		jtp.add(room.getName(), room.getPanel());
+		// the line under makes sure the tab can be closed, it selected the last tab added and makes it a ButtonTabComponent
 		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, talker));
 		room.setEditable(true);
 	}
@@ -88,7 +93,11 @@ public class GUI extends JFrame {
 	private void initServerTalk() {
 		Room serverTalk = new Room("Server Talk");
 		rooms.add(serverTalk);
-		jtp.add("Server Talk", serverTalk.getPanel());
+		jtp.add("Connecting...", serverTalk.getPanel());
+	}
+	
+	public void setServerTalkTitle(String server) {
+		jtp.setTitleAt(0, server);
 	}
 	
 	private void initGUI() {
@@ -99,7 +108,7 @@ public class GUI extends JFrame {
 		jtp = new JTabbedPane();
 		jtp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menubar = new JMenuBar();
-		JMenu file = new JMenu("File");
+		file = new JMenu("File");
 		
 		JMenuItem joinRoom = new JMenuItem("Join room");
 		joinRoom.addActionListener(new ActionListener() {
@@ -125,11 +134,16 @@ public class GUI extends JFrame {
 		file.add(exit);
 		menubar.add(file);
 		setJMenuBar(menubar);
+		enableMenubar(false);
 		
 		getContentPane().add(jtp);
 		setLocationRelativeTo(null);
 	    setDefaultCloseOperation(EXIT_ON_CLOSE);
 	    setVisible(true);
+	}
+	
+	public void enableMenubar(boolean b) {
+		file.setEnabled(b);
 	}
 
 }

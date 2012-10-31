@@ -9,7 +9,7 @@ import java.net.Socket;
 
 /*
  * Starts connection with server
- * Listener will listen to server messages
+ * Listener takes over when a connection is established
  */
 
 public class Connection {
@@ -53,6 +53,8 @@ public class Connection {
 				if (line.indexOf("004") >= 0) {
 					result = "You are connected to " + server + "\n";
 					System.out.println(result);
+					gui.setServerTalkTitle(server);
+					gui.enableMenubar(true);
 					break;
 				} else if (line.indexOf("433") >= 0) {
 					result = "Nickname is already in use.\n";

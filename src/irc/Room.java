@@ -11,8 +11,14 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 /*
  * creates the room as a tab
@@ -23,7 +29,10 @@ public class Room {
 	JPanel mainPanel;
 	JPanel chatPanel;
 	JTextField userText;
-	JTextArea chatWindow;
+	JTextPane chatWindow;
+	StyleContext context;
+	StyledDocument document;
+	Style style;
 	JList<String> userWindow;
 	DefaultListModel<String> users;
 	JScrollPane outerUserWindow;
@@ -37,7 +46,11 @@ public class Room {
 		
 		name = room;
 		
-		chatWindow = new JTextArea();
+		context = new StyleContext();
+		document = new DefaultStyledDocument(context);
+		style = context.getStyle(StyleContext.DEFAULT_STYLE);
+		
+		chatWindow = new JTextPane(document);
 		chatWindow.setEditable(false);
 		
 		mainPanel = new JPanel(new BorderLayout());
@@ -73,7 +86,6 @@ public class Room {
 		userWindow.setModel(users);
 		outerUserWindow.revalidate();
 		outerUserWindow.repaint();
-		System.out.println("Adding element " + user + " to a list of: " + users);
 	}
 	
 	public void removeUser(String user) {
@@ -104,7 +116,21 @@ public class Room {
 	}
 	
 	public void addText(String text) {
-		chatWindow.append(text + "\n");
+		StyleConstants.setForeground(style, Color.BLACK);
+		try {
+			document.insertString(document.getLength(), text + "\n", style);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void addMessage(String text) {
+		StyleConstants.setForeground(style, Color.RED);
+		try {
+			document.insertString(document.getLength(), " - " + text + " - \n", style);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void setEditable(boolean b) {
@@ -133,7 +159,11 @@ public class Room {
 			}
 		});
 		
-		chatWindow = new JTextArea();
+		context = new StyleContext();
+		document = new DefaultStyledDocument(context);
+		style = context.getStyle(StyleContext.DEFAULT_STYLE);
+		
+		chatWindow = new JTextPane(document);
 		chatWindow.setEditable(false);
 		
 		chatPanel.add(userText, BorderLayout.SOUTH);

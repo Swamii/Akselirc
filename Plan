@@ -8,3 +8,17 @@ på sidan med alla användare i kanalen.
 
 Kommer behöva lära mig java swing, att arbeta med sockets, irc-protokollet, formatera text. Få
 djupare förståelse för klassuppdelning och användning. Kanske trådar också.
+
+
+Saker att göra:
+	Preferenser:
+		- Byta färger
+		- Byta namn
+		- Byta server
+		- Popup första gången, sedan sparas preferenserna på datorn
+	
+	Stöd för slashkommandon:
+		- All of them (eller?)
+	
+	Mer än en server samtidigt:
+		- Jobbigt
