@@ -77,7 +77,10 @@ public class Room {
 	}
 	
 	public void removeUser(String user) {
-		users.removeElement(users);
+		users.removeElement(user);
+		userWindow.setModel(users);
+		outerUserWindow.revalidate();
+		outerUserWindow.repaint();
 	}
 	
 	public boolean hasJoined() {
@@ -94,6 +97,10 @@ public class Room {
 	
 	public String getPwd() {
 		return pwd;
+	}
+	
+	public DefaultListModel<String> getUsers() {
+		return users;
 	}
 	
 	public void addText(String text) {

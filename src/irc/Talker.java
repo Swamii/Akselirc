@@ -27,6 +27,17 @@ public class Talker {
 		}
 	}
 	
+	public void leaveRoom(String name) {
+		try {
+			System.out.println("Trying to leave room");
+			System.out.println("PART " + name + "\'r\'n");
+			writer.write("PART " + name + "\r\n");
+			writer.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void sendMessage(String message, String room) throws IOException {
 		writer.write("PRIVMSG " + room + " :" + message + "\r\n");
 		writer.flush();

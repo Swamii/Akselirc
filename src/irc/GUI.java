@@ -2,6 +2,7 @@ package irc;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -43,7 +44,7 @@ public class GUI extends JFrame {
 	}
 	
 	private void connect() {
-		Connection connection = new Connection("irc.eth0.info", this);
+		connection = new Connection("irc.eth0.info", this);
 		talker = new Talker(connection, this);
 		listener = new Listener(connection, this, talker);
 		Thread t = new Thread(listener);
@@ -76,7 +77,7 @@ public class GUI extends JFrame {
 	
 	public void addRoom(Room room) {
 		jtp.add(room.getName(), room.getPanel());
-			
+		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, talker));
 		room.setEditable(true);
 	}
 	
@@ -91,7 +92,7 @@ public class GUI extends JFrame {
 	}
 	
 	private void initGUI() {
-		setTitle("Akselirc v0.003");
+		setTitle("Akselirc v0.004");
 		setSize(WIDTH, HEIGHT);
 		
 		frame = new JFrame();
@@ -105,12 +106,16 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent event) {
 				createRoom();
 			}
-
 		});
 		
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
+				try {
+					connection.closeCrap();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				System.exit(0);
 			}
 		});

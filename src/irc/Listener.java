@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.DefaultListModel;
+
 /*
  * listens to server messages
  * sorts messages to the right rooms
@@ -43,14 +45,13 @@ public class Listener implements Runnable {
 	
 	private void checkShitOutAndDoShitWithIt(String line) {
 		
-		String channel;
 		rooms = gui.getRooms();
 		Room serverTalk = rooms.get(0);
 		serverTalk.addText(line);
 		
 		if (line.contains("PRIVMSG #")) {
-			channel = line.substring(line.indexOf("#"), line.indexOf(" :"));
-			for (int i = 0; i < rooms.size(); i++) {
+			String channel = line.substring(line.indexOf("#"), line.indexOf(" :"));
+			for (int i = 1; i < rooms.size(); i++) {
 				if (channel.equals(rooms.get(i).getName())) {
 					if (line.contains("!") && line.contains(" :")) {
 						String user = line.substring(1, line.indexOf("!"));
@@ -62,9 +63,9 @@ public class Listener implements Runnable {
 		}
 		
 		if (line.contains("JOIN :#") && line.contains(connection.getNick())) {
-			channel = line.substring(line.indexOf("#"));
+			String channel = line.substring(line.indexOf("#"));
 			serverTalk.addText("You are now in " + channel);
-			for (int i = 0; i < rooms.size(); i++) {
+			for (int i = 1; i < rooms.size(); i++) {
 				System.out.println(channel + " - " + rooms.get(i).getName());
 				if (channel.equals(rooms.get(i).getName())) {
 					rooms.get(i).setJoined(true);
@@ -77,13 +78,54 @@ public class Listener implements Runnable {
 			String names = line.substring(line.indexOf(" :") + 2);
 			String[] listOfNames = names.split(" ");
 			for (String name : listOfNames) {
-				channel = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
+				String channel = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
 				System.out.println(name + " in channel " + channel);
-				for (int i = 0; i < rooms.size(); i++) {
+				for (int i = 1; i < rooms.size(); i++) {
 					if (channel.equals(rooms.get(i).getName())) {
 						System.out.println("!Adding a user!");
 						rooms.get(i).addUser(name);
 					}
+				}
+			}
+		}
+		
+		if (line.contains(" JOIN :")) {
+			String channel = line.substring(line.indexOf("#"));
+			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			if (!name.equals(connection.getNick())) {
+				System.out.println(channel + "-!JOIN!-" + name);
+				for (int i = 1; i < rooms.size(); i++) {
+					if (channel.equals(rooms.get(i).getName())) {
+						rooms.get(i).addUser(name);
+						System.out.println("Adding " + name);
+					}
+				}
+			}
+		}
+		
+		if (line.contains(" PART ")) {
+			String channel = line.substring(line.indexOf("#"));
+			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			System.out.println(channel + "-!PART!-" + name);
+			for (int i = 1; i < rooms.size(); i++) {
+				if (channel.equals(rooms.get(i).getName()) && name.equals(talker.getNick())) {
+					System.out.println(rooms.get(i).getName() + " removed from list of rooms!");
+					rooms.remove(i);
+				}
+				else if (channel.equals(rooms.get(i).getName())) {
+					rooms.get(i).removeUser(name);
+					System.out.println("Removing " + name);
+				}
+			}
+		}
+		
+		if (line.contains(" QUIT ")) {
+			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			for (int i = 1; i < rooms.size(); i++) {
+				DefaultListModel<String> users = rooms.get(i).getUsers();
+				System.out.println(name + " in " + users);
+				if (users.contains(name)) {
+					rooms.get(i).removeUser(name);
 				}
 			}
 		}
