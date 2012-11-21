@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.net.SocketException;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -12,7 +11,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
 
 public class GUI extends JFrame {
 	
@@ -25,10 +26,6 @@ public class GUI extends JFrame {
 	private JMenuBar menubar;
 	private JMenuItem joinRoom;
 	private JMenu file;
-	
-	public GUI() {
-		initGUI();
-	}
 	
 	public ArrayList<Connection> getConnections() {
 		return connections;
@@ -122,13 +119,28 @@ public class GUI extends JFrame {
 		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
 	}
 
-	private void initGUI() {
+	public void initGUI() {
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+			try {
+				UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+			} catch (ClassNotFoundException | InstantiationException
+					| IllegalAccessException | UnsupportedLookAndFeelException e1) {
+				e1.printStackTrace();
+			}
+		}
 		
 		setTitle("Akselirc v0.01");
 		setSize(WIDTH, HEIGHT);
 		
 		//frame = new JFrame();
-		jtp = new JTabbedPane();
+		jtp = new JTabbedPane(JTabbedPane.TOP);
 		jtp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menubar = new JMenuBar();
 		file = new JMenu("File");
@@ -152,8 +164,8 @@ public class GUI extends JFrame {
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				for (Connection connection : connections) {
-					connection.getTalker().leaveServer();
+				for (int i = 0; i < connections.size(); i++) {
+					connections.get(i).getTalker().leaveServer();
 				}
 				System.exit(0);
 			}

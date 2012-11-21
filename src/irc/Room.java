@@ -134,8 +134,10 @@ public class Room {
 		userText.setEditable(false);
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				talker.sendMessage(event.getActionCommand(), getName());
-				addText(connection.getNick() + ": " + event.getActionCommand());
+				talker.handleMessage(event.getActionCommand(), getName());
+				if (!event.getActionCommand().startsWith("/")) {
+					addText(connection.getNick() + ": " + event.getActionCommand());
+				}
 				userText.setText("");
 			}
 		});

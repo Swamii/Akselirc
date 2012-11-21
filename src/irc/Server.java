@@ -1,8 +1,7 @@
 package irc;
 
-import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.util.ArrayList;
-
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
@@ -24,7 +23,7 @@ public class Server {
 	}	
 	
 	private void initGUI() {
-		panel = new JPanel(new BorderLayout());
+		panel = new JPanel(new GridLayout(1, 1));
 		jtp = new JTabbedPane();
 		panel.add(jtp);
 	}

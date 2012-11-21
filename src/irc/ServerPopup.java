@@ -78,13 +78,6 @@ public class ServerPopup extends JDialog {
 		dispose();
 	}
 	
-	private void connectScreen() {
-		JLabel text = new JLabel("Connecting...");
-		JPanel connectingPanel = new JPanel();
-		
-		JDialog connecting = new JDialog();
-	}
-	
 	private class ServerFieldListener implements KeyListener {
 
 		@Override

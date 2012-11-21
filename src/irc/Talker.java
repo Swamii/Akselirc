@@ -43,7 +43,35 @@ public class Talker {
 		}
 	}
 	
-	public void sendMessage(String message, String room) {
+	public void handleMessage(String message, String room) {
+		System.out.println(message + "-" + room);
+		if (message.startsWith("/")) {
+			System.out.println("true");
+			parseCommand(message.substring(1));
+		} else {
+			sendMessage(message, room);
+		}
+	}
+	
+	private void parseCommand(String message) {
+		if (!message.contains(" ")) {
+			return;
+		}
+		String[] messageSplit = message.split(" ");
+		int messageLen = messageSplit.length;
+		
+		if (messageSplit[0].toUpperCase().equals("JOIN") && messageLen < 4 && messageLen > 1 ) {
+			String room = messageSplit[1];
+			if (messageLen == 3) {
+				room = room + " " + messageSplit[2];
+			}
+			gui.newRoom(new String[] {connection.getServerName(), room});
+		}
+		
+		
+	}
+	
+	private void sendMessage(String message, String room) {
 		try {
 			writer.write("PRIVMSG " + room + " :" + message + "\r\n");
 			writer.flush();
