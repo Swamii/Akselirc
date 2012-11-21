@@ -3,11 +3,10 @@ package irc;
 public class Akselirc {
 
 	/**
-	 * ze akselirc program
+	 * @param args
 	 */
 	public static void main(String[] args) {
 		GUI gui = new GUI();
-		gui.go();
 	}
 
 }

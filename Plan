@@ -1,3 +1,22 @@
+Uppdatering - stöd för fler servrar:
+
+Akselirc
+	Main-klass
+Connection
+	Startar en connection mot en server, skapar en listener och en talker kopplade till den servern
+GUI
+	Hanterar dom yttre delarna av ui't. Menubar, Servertabbar.
+Server
+	Hanterar mellanskiktet av ui't. Rumtabbar.
+Room
+	Hanterar den inre delen av ui't. Text som visas upp, text skickas genom rätt talker till servern.
+Listener
+	Lyssnar på den servern den är kopplad till.
+Talker
+	Pratar med den servern den är kopplad till.
+
+-----------------------------------------------------------------------------------------------------
+
 Jag vill göra en IRC-klient med GUI i swing.
 
 Vad det gäller uppdelning så följer jag mest klasstrukturen GUI Room Connection Listener Talker.

@@ -106,8 +106,15 @@ public class ButtonTabComponent extends JPanel {
         public void actionPerformed(ActionEvent e) {
             int i = pane.indexOfTabComponent(ButtonTabComponent.this);
             if (i != -1) {
+            	if (pane.getTitleAt(i).startsWith("irc.")) {
+            		// leaving server
+            		System.out.println(pane.getTitleAt(i));
+            		talker.leaveServer();
+            	} else {
+            		// leaving room
+            		talker.leaveRoom(pane.getTitleAt(i));
+            	}
             	System.out.println("Removing tab " + pane.getTitleAt(i));
-            	talker.leaveRoom(pane.getTitleAt(i));
                 pane.remove(i);
             }
         }

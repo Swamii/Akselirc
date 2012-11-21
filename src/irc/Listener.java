@@ -2,29 +2,28 @@ package irc;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 
-/*
- * listens to server messages
- * sorts messages to the right rooms
- * handles all kinds of parsing of incoming text
- */
-
 public class Listener implements Runnable {
+
+	private BufferedReader reader;
+	private Talker talker;
+	private Connection connection;
+	private ArrayList<Room> rooms;
+	private GUI gui;
+	private Server server;
+	private boolean running;
 	
-	BufferedReader reader;
-	GUI gui;
-	Connection connection;
-	Talker talker;
-	ArrayList<Room> rooms;
-	
-	public Listener(Connection connection, GUI gui, Talker talker) {
-		this.talker = talker;
+	public Listener(Connection connection) {
 		this.connection = connection;
-		this.gui = gui;
 		reader = connection.getReader();
+		talker = connection.getTalker();
+		rooms = connection.getRooms();
+		gui = connection.getGUI();
+		running = true;
 	}
 
 	@Override
@@ -32,9 +31,14 @@ public class Listener implements Runnable {
 		String line = null;
 		
 		try {
-			while ((line = reader.readLine()) != null) {
-				if (line.startsWith("PING ")) {
-					talker.sendPong(line);
+			while (running) {
+				try {
+					line = reader.readLine();
+				} catch (SocketException e) {
+					System.out.println("Connection closed.");
+				}
+				if (line == null) {
+					break;
 				} else {
 					checkShitOutAndDoShitWithIt(line);
 				}
@@ -44,11 +48,22 @@ public class Listener implements Runnable {
 		}
 	}
 	
+	public void stop() {
+		running = false;
+	}
+	
 	private void checkShitOutAndDoShitWithIt(String line) {
 		
-		rooms = gui.getRooms();
+		System.out.println(line);
+		
+		rooms = connection.getRooms();
 		Room serverTalk = rooms.get(0);
 		serverTalk.addText(line);
+		server = connection.getServer();
+		
+		if (line.startsWith("PING ")) {
+			talker.sendPong(line);
+		}
 		
 		if (line.contains("PRIVMSG #")) {
 			String channel = line.substring(line.indexOf("#"), line.indexOf(" :"));
@@ -63,14 +78,14 @@ public class Listener implements Runnable {
 			}
 		}
 		
-		if (line.contains("JOIN :#") && line.contains(connection.getNick())) {
+		// if the client joins a channel
+		if ((line.contains(" JOIN :#") || line.contains(" JOIN #")) && line.contains(connection.getNick())) {
 			String channel = line.substring(line.indexOf("#"));
 			serverTalk.addText("You are now in " + channel);
 			for (int i = 1; i < rooms.size(); i++) {
 				System.out.println(channel + " - " + rooms.get(i).getName());
 				if (channel.equals(rooms.get(i).getName())) {
-					rooms.get(i).setJoined(true);
-					gui.addRoom(rooms.get(i));
+					server.addRoom(rooms.get(i).getName());
 				}
 			}
 		}
@@ -92,7 +107,7 @@ public class Listener implements Runnable {
 		}
 		
 		// if a user joins a channel
-		if (line.contains(" JOIN :")) {
+		if (line.contains(" JOIN :") || line.contains(" JOIN ")) {
 			String channel = line.substring(line.indexOf("#"));
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			if (!name.equals(connection.getNick())) {
@@ -114,7 +129,7 @@ public class Listener implements Runnable {
 			System.out.println(channel + "-!PART!-" + name);
 			for (int i = 1; i < rooms.size(); i++) {
 				// check if that user is the client and that we are in the right room in the loop
-				if (channel.equals(rooms.get(i).getName()) && name.equals(talker.getNick())) {
+				if (channel.equals(rooms.get(i).getName()) && name.equals(connection.getNick())) {
 					System.out.println(rooms.get(i).getName() + " removed from list of rooms!");
 					rooms.remove(i);
 				}
@@ -129,6 +144,12 @@ public class Listener implements Runnable {
 		
 		if (line.contains(" QUIT ")) {
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			if (name.equals(connection.getNick())) {
+				// if the client leaving is you!
+				System.out.println("Removing from array");
+				gui.removeConnection(connection);
+				return;
+			}
 			for (int i = 1; i < rooms.size(); i++) {
 				DefaultListModel<String> users = rooms.get(i).getUsers();
 				System.out.println(name + " in " + users);
@@ -138,7 +159,5 @@ public class Listener implements Runnable {
 			}
 		}
 		
-		
 	}
-	
 }

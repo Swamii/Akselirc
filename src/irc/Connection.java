@@ -6,83 +6,149 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.ArrayList;
 
-/*
- * Starts connection with server
- * Listener takes over when a connection is established
- */
+public class Connection implements Runnable {
+	
+	private String server;
+	private String nick;
+	private Socket socket;
+	private BufferedWriter writer;
+	private BufferedReader reader;
+	private GUI gui;
+	private ArrayList<Room> rooms = new ArrayList<Room>();
+	private Server s;
+	private Talker talker;
+	private Listener listener;
+	private Thread thread;
+	private Boolean allGood;
 
-public class Connection {
-	
-	String server;
-	String nick;
-	Socket socket;
-	BufferedWriter writer;
-	BufferedReader reader;
-	GUI gui;
-	
-	public Connection(String server, GUI gui) {
+	public Connection(String nick, String server, GUI gui) {
+		this.nick = nick;
 		this.server = server;
 		this.gui = gui;
-		nick = "zeWeakClient";
+		allGood = false;
 		
-		connect();
+		//connect();
 	}
 	
-	private void connect() {
+	public void run() {
 		try {
 			socket = new Socket(server, 6667);
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		} catch (IOException e) {
-			e.printStackTrace();
+			gui.errorPopup("Something went wrong connecting to " + server);
+			gui.removeConnection(this);
+			return;
 		}
 		
 		try {
 			writer.write("NICK " + nick + "\r\n");
-			writer.write("USER " + nick + " 8 * : swamoo weak client!\r\n");
-			writer.flush( );
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		
-		String line = null;
-		String result = "Something went wrong connecting to the server :(\n";
-		try {
-			while ((line = reader.readLine()) != null) {
-				if (line.indexOf("004") >= 0) {
-					result = "You are connected to " + server + "\n";
-					System.out.println(result);
-					gui.setServerTalkTitle(server);
-					gui.enableMenubar(true);
-					break;
-				} else if (line.indexOf("433") >= 0) {
-					result = "Nickname is already in use.\n";
-					System.out.println(result);
-					break;
-				}
-			}
-			
+			writer.write("USER " + nick + " 8 * : " + nick + "\r\n");
+			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		String line;
+		try {
+			while ((line = reader.readLine()) != null) {
+				System.out.println(line);
+				if (line.startsWith("PING ")) {
+					// some servers like to ping even when connecting :)
+					try {
+						writer.write("PONG " + line.substring(5) + "\r\n");
+						writer.flush();
+					} catch (IOException e1) {
+						gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(");
+					}
+				}
+				if (line.indexOf("004") >= 0) {
+					System.out.println("Connected to " + server);
+					createServer();
+					break;
+				} else if (line.indexOf("433") >= 0) {
+					gui.errorPopup("Nickname is already in use");
+					break;
+				}
+			}
+		} catch (IOException e) {
+			gui.errorPopup("Something happened");
+		}
+		
 	}
 	
-	public BufferedReader getReader() {
-		return reader;
+	public boolean allGood() {
+		return allGood;
 	}
 	
-	public BufferedWriter getWriter() {
-		return writer;
+	private void createServer() {
+		
+		talker = new Talker(this);
+		listener = new Listener(this);
+		Room r = new Room("Server talk");
+		rooms.add(r);
+		s = new Server(this);
+		s.addServerTalk(r);
+		gui.addServer(s);
+		thread = new Thread(listener);
+		thread.start();
+		gui.enableJoinRoomMenuItem(true);
+		allGood = true;
+		gui.addConnection(this);
+		
+	}
+	
+	public void addRoom(Room room) {
+		rooms.add(room);
+		talker.joinRoom(room);
+	}
+	
+	public ArrayList<Room> getRooms() {
+		return rooms;
 	}
 	
 	public String getNick() {
 		return nick;
 	}
 	
-	public void closeCrap() throws IOException {
-		writer.close();
-		reader.close();
-		socket.close();
+	public Server getServer() {
+		return s;
 	}
+	
+	public String getServerName() {
+		return server;
+	}
+	
+	public GUI getGUI() {
+		return gui;
+	}
+	
+	public Listener getListener() {
+		return listener;
+	}
+	
+	public Talker getTalker() {
+		return talker;
+	}
+	
+	public BufferedWriter getWriter() {
+		return writer;
+	}
+	
+	public BufferedReader getReader() {
+		return reader;
+	}
+	
+	public void closeCrap() {
+		try {
+			listener.stop();
+			socket.close();
+		} catch (IOException e) {
+			gui.errorPopup("Something went wrong closing the crap");
+		}
+	}
+	
 }
