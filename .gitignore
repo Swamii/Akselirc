@@ -1,1 +1,6 @@
 *.class
+bin/*
+local.properties
+.classpath
+.settings/
+.DS_Store
