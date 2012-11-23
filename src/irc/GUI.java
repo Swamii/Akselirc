@@ -120,7 +120,7 @@ public class GUI extends JFrame {
 			}
 		}
 		
-		setTitle("Akselirc v0.01");
+		setTitle("Akselirc v0.05");
 		setSize(WIDTH, HEIGHT);
 		
 		//frame = new JFrame();
