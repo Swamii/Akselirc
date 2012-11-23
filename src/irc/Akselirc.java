@@ -3,7 +3,7 @@ package irc;
 public class Akselirc {
 
 	/**
-	 * @param args
+	 * Akselirc main-class
 	 */
 	public static void main(String[] args) {
 		GUI gui = new GUI();

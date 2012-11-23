@@ -54,8 +54,6 @@ public class Listener implements Runnable {
 	
 	private void checkShitOutAndDoShitWithIt(String line) {
 		
-		System.out.println(line);
-		
 		rooms = connection.getRooms();
 		Room serverTalk = rooms.get(0);
 		serverTalk.addText(line);

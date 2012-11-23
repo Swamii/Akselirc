@@ -1,19 +1,24 @@
-Uppdatering - stöd för fler servrar:
+Klasstruktur:
+
+Uppdatering - stöd för fler servrar
 
 Akselirc
 	Main-klass
-Connection
+Connection (separat tråd)
 	Startar en connection mot en server, skapar en listener och en talker kopplade till den servern
 GUI
-	Hanterar dom yttre delarna av ui't. Menubar, Servertabbar.
+	Hanterar dom yttre delarna av ui't. Menubar, Servertabbar. Gör fortfarande lite mer än den ska. Tanken är den enbart ska
+	hantera design, men det har blivit så att den hanterar lite logik också. Arbetar på att separera dom.
 Server
 	Hanterar mellanskiktet av ui't. Rumtabbar.
 Room
 	Hanterar den inre delen av ui't. Text som visas upp, text skickas genom rätt talker till servern.
-Listener
-	Lyssnar på den servern den är kopplad till.
+Listener (separat tråd)
+	Lyssnar på den servern den är kopplad till. Hanterar all text servern skickar, ser till att rätt saker händer.
 Talker
-	Pratar med den servern den är kopplad till.
+	Pratar med den servern den är kopplad till. Hanterar text som klienten skickar.
+***Popup
+	Diverse popups för till exempel nytt rum eller connection.
 
 -----------------------------------------------------------------------------------------------------
 
@@ -37,7 +42,7 @@ Saker att göra:
 		- Popup första gången, sedan sparas preferenserna på datorn
 	
 	Stöd för slashkommandon:
-		- All of them (eller?)
+		- All of them (eller?) (startat)
 	
 	Mer än en server samtidigt:
-		- Jobbigt
+		- Jobbigt (done)

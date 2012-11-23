@@ -23,10 +23,9 @@ public class Talker {
 		return connection;
 	}
 
-	public void joinRoom(Room room) {
+	public void joinRoom(String room) {
 		try {
-			if (room.getPwd() != null) { writer.write("JOIN " + room.getName() + " " + room.getPwd() + "\r\n"); }
-			else { writer.write("JOIN " + room.getName() + "\r\n"); }
+			writer.write("JOIN " + room + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong trying to join a room! :)");
@@ -46,7 +45,6 @@ public class Talker {
 	public void handleMessage(String message, String room) {
 		System.out.println(message + "-" + room);
 		if (message.startsWith("/")) {
-			System.out.println("true");
 			parseCommand(message.substring(1));
 		} else {
 			sendMessage(message, room);
@@ -61,11 +59,10 @@ public class Talker {
 		int messageLen = messageSplit.length;
 		
 		if (messageSplit[0].toUpperCase().equals("JOIN") && messageLen < 4 && messageLen > 1 ) {
-			String room = messageSplit[1];
-			if (messageLen == 3) {
-				room = room + " " + messageSplit[2];
-			}
-			gui.newRoom(new String[] {connection.getServerName(), room});
+			String room = message.substring(message.indexOf(" ") + 1);
+			if (!room.startsWith("#")) room = "#" + room;
+			connection.addRoom(room);
+			joinRoom(room);
 		}
 		
 		
@@ -80,6 +77,15 @@ public class Talker {
 		}
 	}
 	
+	public void sendPong(String line) {
+		try {
+			writer.write("PONG " + line.substring(5) + "\r\n");
+			writer.flush();
+		} catch (IOException e1) {
+			gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(");
+		}
+	}
+	
 	public void leaveServer() {
 		try {
 			writer.write("QUIT :Bye bye\r\n");
@@ -89,16 +95,6 @@ public class Talker {
 			gui.errorPopup("Shit went wrong trying to leave the server");
 		}
 		gui.removeConnection(connection);
-	}
-	
-	
-	public void sendPong(String line) {
-		try {
-			writer.write("PONG " + line.substring(5) + "\r\n");
-			writer.flush();
-		} catch (IOException e1) {
-			gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(");
-		}
 	}
 	
 }

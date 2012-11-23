@@ -28,11 +28,10 @@ public class Connection implements Runnable {
 		this.server = server;
 		this.gui = gui;
 		allGood = false;
-		
-		//connect();
 	}
 	
 	public void run() {
+		gui.addConnection(this);
 		try {
 			socket = new Socket(server, 6667);
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -51,10 +50,18 @@ public class Connection implements Runnable {
 			e.printStackTrace();
 		}
 		
+		talker = new Talker(this);
+		listener = new Listener(this);
+		Room r = new Room("Server talk");
+		rooms.add(r);
+		s = new Server(this);
+		s.addServerTalk(r);
+		gui.addServer(s);
+		
 		String line;
 		try {
 			while ((line = reader.readLine()) != null) {
-				System.out.println(line);
+				rooms.get(0).addText(line);
 				if (line.startsWith("PING ")) {
 					// some servers like to ping even when connecting :)
 					try {
@@ -70,6 +77,7 @@ public class Connection implements Runnable {
 					break;
 				} else if (line.indexOf("433") >= 0) {
 					gui.errorPopup("Nickname is already in use");
+					gui.removeConnection(this);
 					break;
 				}
 			}
@@ -85,24 +93,20 @@ public class Connection implements Runnable {
 	
 	private void createServer() {
 		
-		talker = new Talker(this);
-		listener = new Listener(this);
-		Room r = new Room("Server talk");
-		rooms.add(r);
-		s = new Server(this);
-		s.addServerTalk(r);
-		gui.addServer(s);
 		thread = new Thread(listener);
 		thread.start();
 		gui.enableJoinRoomMenuItem(true);
 		allGood = true;
-		gui.addConnection(this);
 		
 	}
 	
-	public void addRoom(Room room) {
-		rooms.add(room);
-		talker.joinRoom(room);
+	public void addRoom(String room) {
+		if (room.contains(" ")) {
+			String[] roomInfo = room.split(" ");
+			rooms.add(new Room(roomInfo[0], roomInfo[1], this));
+		} else {
+			rooms.add(new Room(room, this));
+		}
 	}
 	
 	public ArrayList<Room> getRooms() {

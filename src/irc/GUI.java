@@ -1,10 +1,12 @@
 package irc;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.ArrayList;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -36,27 +38,37 @@ public class GUI extends JFrame {
 	}
 	
 	public void removeConnection(Connection connection) {
+		// removes a connection from the array and if it hasn't already, it removes the tab connected to it
 		int removeIndex = -1;
 		for (Connection c : connections) {
 			if (c.equals(connection)) {
 				removeIndex = connections.indexOf(c);
+				for (int i = 0; i < jtp.getTabCount(); i++) {
+					// check if the tab still exists
+					if (c.getServerName().equals(jtp.getTitleAt(i))) {
+						jtp.removeTabAt(i);
+					}
+				}
 			}
+			
+		}
+		if (removeIndex == -1) {
+			return;
 		}
 		if (connections.get(removeIndex).allGood()) {
+			// close the connection if it hasn't already been done
 			connections.get(removeIndex).closeCrap();
 		}
 		connections.remove(removeIndex);
 		
 		if (connections.size() == 0) {
+			// if there are no connections left you can't join a room
 			enableJoinRoomMenuItem(false);
 		}
 	}
 	
 	public void addConnection(Connection connection) {
 		connections.add(connection);
-		for (Connection c : connections) {
-			System.out.println("---" + c.getServerName());
-		}
 	}
 	
 	// start connection to server
@@ -65,52 +77,6 @@ public class GUI extends JFrame {
 		Connection connection = new Connection(details[0], details[1], this);
 		Thread t = new Thread(connection);
 		t.start();
-		if (connection.allGood()) {
-			connections.add(connection);
-		}
-		System.out.println(connections.size());
-	}
-	
-	public void serverPopup() {
-		new ServerPopup(this);
-	}
-	
-	public void newRoom(String[] details) {
-		assert (details.length == 2);
-		String server = details[0];
-		String room = details[1];
-		String pwd = null;
-		if (room.contains(" ")) {
-			pwd = room.substring(room.indexOf(" ") + 1);
-			room = room.substring(0, room.indexOf(" "));
-			System.out.println(room + " " + pwd);
-		}
-		if (!room.startsWith("#")) {
-			room = "#" + room;
-		}
-		
-		for (Connection connection : connections) {
-			if (server.equals(connection.getServerName())) {
-				if (pwd != null) {
-					connection.addRoom(new Room(room, pwd, connection));
-				} else {
-					connection.addRoom(new Room(room, connection));
-				}
-			}
-		}
-	}
-	
-	public void roomPopup() {
-		new RoomPopup(this);
-	}
-	
-	// should maybe be made into its own class soon enough
-	public void errorPopup(String error) {
-		JOptionPane.showMessageDialog(frame,
-			    error,
-			    "Error",
-			    JOptionPane.ERROR_MESSAGE);
-	
 	}
 	
 	// called by connection when a connection to a server has been established
@@ -118,12 +84,30 @@ public class GUI extends JFrame {
 		jtp.add(server.getName(), server.getPanel());
 		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
 	}
+	
+	public void serverPopup() {
+		new ServerPopup(this);
+	}
+	
+	public void roomPopup() {
+		new RoomPopup(this);
+	}
+	
+	// simple error popup
+	public void errorPopup(String error) {
+		JOptionPane.showMessageDialog(frame,
+			    error,
+			    "Error",
+			    JOptionPane.ERROR_MESSAGE);
+	
+	}
 
 	public void initGUI() {
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {
 		            UIManager.setLookAndFeel(info.getClassName());
+		            UIManager.put("nimbusFocus", new Color(0,0,0,0));
 		            break;
 		        }
 		    }
@@ -164,10 +148,7 @@ public class GUI extends JFrame {
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				for (int i = 0; i < connections.size(); i++) {
-					connections.get(i).getTalker().leaveServer();
-				}
-				System.exit(0);
+				quit();
 			}
 		});
 		
@@ -187,6 +168,13 @@ public class GUI extends JFrame {
 		
 	}
 	
+	private void quit() {
+		for (int i = 0; i < connections.size(); i++) {
+			connections.get(i).getTalker().leaveServer();
+		}
+		System.exit(0);
+	}
+	
 	public void enableJoinRoomMenuItem(boolean b) {
 		joinRoom.setEnabled(b);
 	}
@@ -195,11 +183,7 @@ public class GUI extends JFrame {
 		
 		@Override
 		public void windowClosing(WindowEvent e) {
-			// handle closing sockets n stuff
-			for (int i = 0; i < connections.size(); i++) {
-				connections.get(i).getTalker().leaveServer();
-			}
-			System.exit(0);
+			quit();
 		}
 		
 		@Override

@@ -86,7 +86,7 @@ public class ButtonTabComponent extends JPanel {
 		public TabButton() {
             int size = 17;
             setPreferredSize(new Dimension(size, size));
-            setToolTipText("Click to leave room");
+            setToolTipText("Click to leave");
             //Make the button looks the same for all Laf's
             setUI(new BasicButtonUI());
             //Make it transparent
@@ -113,9 +113,8 @@ public class ButtonTabComponent extends JPanel {
             	} else {
             		// leaving room
             		talker.leaveRoom(pane.getTitleAt(i));
+            		pane.remove(i);
             	}
-            	System.out.println("Removing tab " + pane.getTitleAt(i));
-                pane.remove(i);
             }
         }
 

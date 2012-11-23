@@ -1,6 +1,8 @@
 package irc;
 
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -35,12 +37,14 @@ public class ServerPopup extends JDialog {
 	
 	private void initGUI() {
 		nickField = new JFormattedTextField();
+		// standard user name is the user name you have on your OS
 		nickField.setText(System.getProperty("user.name"));
-		nickField.addAncestorListener(new RequestFocusListener());
 		nickField.addKeyListener(keyListener);
+		nickField.setColumns(10);
 		
 		serverField = new JFormattedTextField();
 		serverField.addKeyListener(keyListener);
+		serverField.setColumns(10);
 		
 		serverOkButton = new JButton("Connect");
 		serverOkButton.setEnabled(false);
@@ -49,13 +53,45 @@ public class ServerPopup extends JDialog {
 		serverNoButton = new JButton("Cancel");
 		serverNoButton.addMouseListener(mouseListener);
 		
-		connectPanel = new JPanel(new GridLayout(0, 2));
-		connectPanel.add(new JLabel(" Nick name:"));
-		connectPanel.add(nickField);
-		connectPanel.add(new JLabel(" Server:"));
-		connectPanel.add(serverField);
-		connectPanel.add(serverOkButton);
-		connectPanel.add(serverNoButton);
+		connectPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		connectPanel.add(new JLabel("Nick:"), c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridwidth = 3;
+		c.insets = new Insets(0, 5, 5, 5);
+		connectPanel.add(nickField, c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridy = 1;
+		c.gridx = 0;
+		c.gridwidth = 1;
+		c.insets = new Insets(0,0,0,0);
+		connectPanel.add(new JLabel("Server:"), c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridwidth = 3;
+		c.insets = new Insets(0, 5, 5, 5);
+		connectPanel.add(serverField, c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridy = 2;
+		c.gridx = 0;
+		c.gridwidth = 2;
+		c.weightx = 0.5;
+		c.insets = new Insets(10, 0, 0, 0);
+		connectPanel.add(serverOkButton, c);
+		
+		c.gridx = 2;
+		connectPanel.add(serverNoButton, c);
+		
 		connectPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 		
 		setTitle("New connection");
@@ -63,6 +99,7 @@ public class ServerPopup extends JDialog {
 		setResizable(false);
 		pack();
 		setLocationRelativeTo(getParent());
+		nickField.requestFocusInWindow();
 		setVisible(true);
 	}
 	
@@ -84,6 +121,7 @@ public class ServerPopup extends JDialog {
 		public void keyReleased(KeyEvent e) {
 			String nick = nickField.getText();
 			String server = serverField.getText().toLowerCase();
+			// check if its a semi-valid irc-server, if it is then enable the ok button
 			if (nick.length() > 0 && server.startsWith("irc.") && !nick.contains(" ") && !server.contains(" ")) {
 				serverOkButton.setEnabled(true);
 			} else {
@@ -95,6 +133,7 @@ public class ServerPopup extends JDialog {
 		public void keyTyped(KeyEvent e) {}
 		@Override
 		public void keyPressed(KeyEvent e) {
+			// enabling the enter key to connect faster
 			if (KeyEvent.VK_ENTER == e.getKeyCode() && serverOkButton.isEnabled()) {
 				connect();
 			}

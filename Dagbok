@@ -1,0 +1,9 @@
+23 Nov:
+Den här veckan har jag jobbat med att påbörja stödet för slashkommandon. Jag har ändrat lite i hur ett rum skapas för att
+(förhoppningsvis) förenkla processen samt göra de två tillvägagångssätten (knappen i menyn och '/join') snarlika.
+Har utökat servrarna jag testar på till 3. Det krävde lite mindre ändringar så att allt funkar på alla. T.ex skickar
+Quakenet inget svar när man skickat 'QUIT' till servern, det gör mina två andra testservrar.
+Jag har också jobbat ganska mycket på designen på klienten. Jag har bytt till ett tema som ska funka på alla OS som har nyare
+java-version än version 6. Har man lägre version så ska man få ett äldre crossplatformstema. Har även gjort en småjustering
+i utseendet på temat. Jag har mestadels utforskat, så att jag lätt kan gå tillbaka till det om jag vill göra fler förändringar.
+Försöker kommentera lite när jag ser ett område som är dåligt kommenterat.
