@@ -1,8 +1,17 @@
-*.class
 bin/*
 local.properties
 .classpath
 .settings/
 .DS_Store
-miglayout-src/*
-miglayout*
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Project files #
+/.idea/
+*.iml
+
+/out/
