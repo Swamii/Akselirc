@@ -1,21 +1,21 @@
 package irc;
 
-import javax.swing.JDialog;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JButton;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 /**
  * 
@@ -27,6 +27,7 @@ import java.util.ArrayList;
 public class RoomPopup extends JDialog {
 
 	private static final long serialVersionUID = 1L;
+	private static RoomPopup RoomPopupInstance = null;
 	private RoomFieldListener keyListener;
 	private RoomButtonListener mouseListener;
 	private JComboBox<String> serverChoice;
@@ -36,8 +37,8 @@ public class RoomPopup extends JDialog {
 	private JLabel info;
 	private GUI gui;
 	
-	public RoomPopup(GUI gui) {
-		this.gui = gui;
+	public RoomPopup() {
+		gui = GUI.gui;
 		keyListener = new RoomFieldListener();
 		mouseListener = new RoomButtonListener();
 		initGUI();
@@ -45,25 +46,20 @@ public class RoomPopup extends JDialog {
 	
 	private void initGUI() {
 		ArrayList<Connection> connections = gui.getConnections();
-		// since i don't know if all the servers are fully connected i can't create a normal String[], since i don't know
-		// the length. i have to add them to a dynamic list and then convert.
-		ArrayList<String> firstChoices = new ArrayList<String>();
+		
+		// get all the connected servers and put them in the combobox
+		serverChoice = new JComboBox<String>();
 		for (int i = 0; i < connections.size(); i++) {
 			// make sure that the server is 100% connected
 			if (connections.get(i).allGood()) {
-				firstChoices.add(connections.get(i).getServerName());
+				serverChoice.addItem(connections.get(i).getServerName());
 			}
 		}
-		
-		String[] choices = new String[firstChoices.size()];
-		for (int i = 0; i < firstChoices.size(); i++) {
-			choices[i] = firstChoices.get(i);
-		}
-		
-		// get all the connected servers and put them in the combobox
-		serverChoice = new JComboBox<String>(choices);
 		// set the currently selected servertab as standard
-		serverChoice.setSelectedIndex(gui.getSelectedTab());
+		int tabIndex = gui.getSelectedTab();
+		if (connections.get(tabIndex).allGood()) {
+			serverChoice.setSelectedIndex(gui.getSelectedTab());
+		}
 		
 		info = new JLabel("If the room has a password, write 'ROOM PASSWORD'");
 		info.setFont(new Font("Verdana", Font.PLAIN, 10));
@@ -127,6 +123,13 @@ public class RoomPopup extends JDialog {
 		roomField.requestFocusInWindow();
 		setVisible(true);
 		
+	}
+	
+	public static RoomPopup getInstance() {
+		if (RoomPopupInstance == null) {
+			RoomPopupInstance = new RoomPopup();
+		}
+		return RoomPopupInstance;
 	}
 	
 	private void join() {

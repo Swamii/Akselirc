@@ -8,6 +8,12 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * This class starts a connection to a server. It creates the classes necessary to listen and talk
+ * to the server. It is only responsible for the connection phase, then it delegates the listening
+ * and talking to the respective classes.
+ */
+
 public class Connection implements Runnable {
 	
 	private String server;
@@ -21,16 +27,18 @@ public class Connection implements Runnable {
 	private Talker talker;
 	private Listener listener;
 	private Thread thread;
-	private Boolean allGood;
+	private volatile Boolean allGood = false;
+	private String startupRooms;
 
-	public Connection(String nick, String server, GUI gui) {
+	public Connection(String nick, String server, String rooms) {
 		this.nick = nick;
 		this.server = server;
-		this.gui = gui;
-		allGood = false;
+		startupRooms = rooms;
+		gui = GUI.gui;
 	}
 	
 	public void run() {
+		// add this connection to the array, so the gui can keep track of it
 		gui.addConnection(this);
 		try {
 			socket = new Socket(server, 6667);
@@ -42,6 +50,7 @@ public class Connection implements Runnable {
 			return;
 		}
 		
+		// tell the server what nick and name we want.
 		try {
 			writer.write("NICK " + nick + "\r\n");
 			writer.write("USER " + nick + " 8 * : " + nick + "\r\n");
@@ -50,18 +59,23 @@ public class Connection implements Runnable {
 			e.printStackTrace();
 		}
 		
+		// create talker and listener
 		talker = new Talker(this);
 		listener = new Listener(this);
-		Room r = new Room("Server talk");
+		// create the server talk room which displays server messages.
+		Room r = new Room(this);
 		rooms.add(r);
 		s = new Server(this);
+		// add the server talk "room" to the server (the inner jtabbedpane)
 		s.addServerTalk(r);
+		// add the server to the gui
 		gui.addServer(s);
 		
 		String line;
 		try {
+			// read lines from server and respond accordingly
 			while ((line = reader.readLine()) != null) {
-				rooms.get(0).addText(line);
+				r.addText(line);
 				if (line.startsWith("PING ")) {
 					// some servers like to ping even when connecting :)
 					try {
@@ -73,7 +87,8 @@ public class Connection implements Runnable {
 				}
 				if (line.indexOf("004") >= 0) {
 					System.out.println("Connected to " + server);
-					createServer();
+					// all good. let the listener take over.
+					startListener();
 					break;
 				} else if (line.indexOf("433") >= 0) {
 					gui.errorPopup("Nickname is already in use");
@@ -87,28 +102,59 @@ public class Connection implements Runnable {
 		
 	}
 	
-	public boolean allGood() {
-		return allGood;
-	}
-	
-	private void createServer() {
+	private void startListener() {
 		
 		thread = new Thread(listener);
 		thread.start();
 		gui.enableJoinRoomMenuItem(true);
-		allGood = true;
-		
-	}
-	
-	public void addRoom(String room) {
-		if (room.contains(" ")) {
-			String[] roomInfo = room.split(" ");
-			rooms.add(new Room(roomInfo[0], roomInfo[1], this));
-		} else {
-			rooms.add(new Room(room, this));
+		checkPreConfRooms();
+		synchronized(this) {
+			allGood = true;
+			this.notifyAll();
 		}
 	}
 	
+	private void checkPreConfRooms() {
+		if (!startupRooms.equals("")) {
+			if (startupRooms.contains(",")) {
+				for (String s : startupRooms.split(",")) {
+					addRoom(s);
+					talker.joinRoom(s);
+				}
+			} else {
+				addRoom(startupRooms);
+				talker.joinRoom(startupRooms);
+			}
+		}
+	}
+	
+	public void addRoom(String room) {
+		// if room has password
+		if (room.contains(" ")) {
+			String[] roomInfo = room.split(" ");
+			Room r = new Room(roomInfo[0], roomInfo[1], this);
+			rooms.add(r);
+		} else {
+			Room r = new Room(room, this);
+			rooms.add(r);
+		}
+	}
+	
+	public void closeCrap() {
+		try {
+			listener.stop();
+			socket.close();
+		} catch (IOException e) {
+			gui.errorPopup("Something went wrong closing the crap");
+			System.out.println("Shit went wrong closing " + server);
+		}
+	}
+	
+	public boolean allGood() {
+		return allGood;
+	}
+	
+	// lots of gets since this is the hub for each connection
 	public ArrayList<Room> getRooms() {
 		return rooms;
 	}
@@ -144,14 +190,4 @@ public class Connection implements Runnable {
 	public BufferedReader getReader() {
 		return reader;
 	}
-	
-	public void closeCrap() {
-		try {
-			listener.stop();
-			socket.close();
-		} catch (IOException e) {
-			gui.errorPopup("Something went wrong closing the crap");
-		}
-	}
-	
 }

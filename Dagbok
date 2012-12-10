@@ -7,3 +7,22 @@ Jag har också jobbat ganska mycket på designen på klienten. Jag har bytt till
 java-version än version 6. Har man lägre version så ska man få ett äldre crossplatformstema. Har även gjort en småjustering
 i utseendet på temat. Jag har mestadels utforskat, så att jag lätt kan gå tillbaka till det om jag vill göra fler förändringar.
 Försöker kommentera lite när jag ser ett område som är dåligt kommenterat.
+
+28 Nov:
+Har mest dragit mig i håret kring olika quit-meddelanden om klienten lämnar mer än en server vid windowClosing-eventet.
+Löst nu. Problemet var att flera trådar försökte komma åt samma array samtidigt. La till en sleep i en loop. Det verkade lösa problemet.
+Jag har lagt till ett textfield i server talk-rummet, så att man kan skriva kommandon till servern direkt där.
+
+2 Dec:
+Tidigare skriven lösning stämde inte så bra. Problemet var mer specifikt att jag tog bort objekt ur en array som jag loopade genom.
+På sista tiden har jag mest försökt lära mig att hantera XML genom java. Tänkte använda mig av en xml-fil för att spara förinställda
+servrar och rum som klienten ska connecta till vid startup.
+
+3 Dec:
+Har jobbat på att göra det möjligt att ha privatchattar med personer. Verkar som att det funkar ganska okej nu. Får en bugg ibland, men fel-
+meddelandet är inte specifikt alls (kan inte ens se någon av mina filer i error logen). Nån array är out of bounds. Måste se tydligare
+när exakt det blir fel innan jag kan åtgärda det.
+
+7 Dec:
+Har jobbat hårt på att planera och skapa en dialog för preferenser. Mycket tid har specifikt lagts på att lära mig att göra en egen
+tablemodel för jtable. Och att koppla det till java's Preferences-api.

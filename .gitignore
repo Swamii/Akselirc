@@ -4,3 +4,5 @@ local.properties
 .classpath
 .settings/
 .DS_Store
+miglayout-src/*
+miglayout*

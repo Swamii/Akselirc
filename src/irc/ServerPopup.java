@@ -17,6 +17,7 @@ import javax.swing.border.EmptyBorder;
 public class ServerPopup extends JDialog {
 	
 	private static final long serialVersionUID = 1L;
+	private static ServerPopup ServerPopupInstance = null;
 	private String[] details;
 	private ServerFieldListener keyListener;
 	private ServerButtonListener mouseListener;
@@ -27,12 +28,19 @@ public class ServerPopup extends JDialog {
 	private JPanel connectPanel;
 	private GUI gui;
 	
-	public ServerPopup(GUI gui) {
-		this.gui = gui;
+	public ServerPopup() {
+		gui = GUI.gui;
 		details = new String[2];
 		keyListener = new ServerFieldListener();
 		mouseListener = new ServerButtonListener();
 		initGUI();
+	}
+	
+	public static ServerPopup getInstance() {
+		if (ServerPopupInstance == null) {
+			ServerPopupInstance = new ServerPopup();
+		}
+		return ServerPopupInstance;
 	}
 	
 	private void initGUI() {

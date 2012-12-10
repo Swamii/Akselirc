@@ -1,3 +1,34 @@
+Saker att göra:
+
+	Preferenser:
+		- Byta färger (ev)
+		- Ljudinställningar
+		- Förinställd connection med nick och rum som ska öppnas
+		- Popup första gången, sedan sparas preferenserna på datorn (ev)
+	
+	Ljud:
+		- När någon säger ens namn borde det pinga till m.m.
+	
+	Timestamps (med option att stänga av)
+	
+	Loggar (option att sätta på)
+	
+	Fixa till sortering av users
+	
+	Tab-completion av namn
+	
+	Stöd för slashkommandon:
+		- All of them (eller?) (startat)
+	
+	Arv för popups
+	
+Klart:
+	Mer än en server samtidigt:
+		- Jobbigt (done) 
+	Privatchattar med personer
+		
+---------------------------------------------------------------------------------------------------
+
 Klasstruktur:
 
 Uppdatering - stöd för fler servrar
@@ -19,6 +50,8 @@ Talker
 	Pratar med den servern den är kopplad till. Hanterar text som klienten skickar.
 ***Popup
 	Diverse popups för till exempel nytt rum eller connection.
+ButtonTabComponent
+	"Lånad" klass som ser till att det finns ett x på tabbar så att det är lätt att stänga dom.
 
 -----------------------------------------------------------------------------------------------------
 
@@ -32,17 +65,4 @@ på sidan med alla användare i kanalen.
 
 Kommer behöva lära mig java swing, att arbeta med sockets, irc-protokollet, formatera text. Få
 djupare förståelse för klassuppdelning och användning. Kanske trådar också.
-
-
-Saker att göra:
-	Preferenser:
-		- Byta färger
-		- Byta namn
-		- Byta server
-		- Popup första gången, sedan sparas preferenserna på datorn
 	
-	Stöd för slashkommandon:
-		- All of them (eller?) (startat)
-	
-	Mer än en server samtidigt:
-		- Jobbigt (done)

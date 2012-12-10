@@ -1,0 +1,9 @@
+Open Bugz:
+	- Sometimes I get a java.lang.ArrayIndexOutOfBoundsException. Hard to say at what times exactly. Seems like it just happens sometimes,
+	the client doesn't crash or anything. None of my files are mentioned in the error log.
+	
+	
+	
+Closed:
+	- When exiting multiple connections, the second one doesn't exit properly. the server never gets told the client is leaving.
+		- Solved. I was removing stuff from an array I was looping through, makes things weird.

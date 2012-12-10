@@ -13,11 +13,13 @@ public class Server {
 	private JTabbedPane jtp;
 	private Talker talker;
 	private ArrayList<Room> rooms;
+	private ArrayList<PrivChat> privChats;
 
 	public Server(Connection connection) {
 		this.connection = connection;
 		name = connection.getServerName();
 		talker = connection.getTalker();
+		privChats = new ArrayList<PrivChat>();
 		
 		initGUI();
 	}	
@@ -42,6 +44,59 @@ public class Server {
 			}
 		}
 		
+	}
+	
+	public void addPrivChatMessage(String user, String message) {
+		addPrivChat(user);
+		for (PrivChat chat : privChats) {
+			if (chat.getName().equals(user)) {
+				chat.addText(user + ": " + message);
+			}
+		}
+	}
+	
+	public void addPrivChat(String user) {
+		if (!privChatExists(user)) {
+			PrivChat chat = new PrivChat(user, connection);
+			privChats.add(chat);
+			jtp.add(chat.getName(), chat.getPanel());
+			jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
+		}
+	}
+	
+	public void removePrivChat(String user) {
+		PrivChat rem = null;
+		for (PrivChat chat : privChats) {
+			if (chat.getName().equals(user)) {
+				rem = chat;
+			}
+		}
+		if (rem != null) {
+			privChats.remove(rem);
+		}
+	}
+	
+	public ArrayList<PrivChat> getPrivChats() {
+		return privChats;
+	}
+	
+	// checks if we have a private chat-tab open with the user
+	private boolean privChatExists(String user) {
+		boolean exists = false;
+		for (int i = 0; i < jtp.getTabCount(); i++) {
+			if (user.equals(jtp.getTitleAt(i))) {
+				exists = true;
+			}
+		}
+		return exists;
+	}
+	
+	public void removeRoom(String roomName) {
+		for (int i = 0; i < jtp.getTabCount(); i++) {
+			if (roomName.equals(jtp.getTitleAt(i))) {
+				jtp.remove(i);
+			}
+		}
 	}
 
 	public String getName() {

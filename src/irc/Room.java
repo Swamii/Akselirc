@@ -5,8 +5,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Arrays;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -36,10 +40,13 @@ public class Room {
 	private String name;
 	private Talker talker;
 	private Connection connection;
+	private Server server;
 
 	// constructor for the server talk
-	public Room(String name) {
-		this.name = name;
+	public Room(Connection connection) {
+		name = "Server talk";
+		this.connection = connection;
+		talker = connection.getTalker();
 		initServerTalk();
 	}
 	
@@ -49,6 +56,7 @@ public class Room {
 		this.name = name;
 		pwd = null;
 		talker = connection.getTalker();
+		server = connection.getServer();
 		initGUI();
 	}
 	
@@ -58,6 +66,7 @@ public class Room {
 		this.name = name; 
 		this.pwd = pwd;
 		talker = connection.getTalker();
+		server = connection.getServer();
 		initGUI();
 	}
 	
@@ -126,12 +135,13 @@ public class Room {
 		outerUserWindow.repaint();
 	}
 	
-	private void initGUI() {
+	protected void initGUI() {
 		
 		chatPanel = new JPanel(new BorderLayout());
 		
 		userText = new JTextField();
 		userText.setEditable(false);
+		userText.requestFocusInWindow();
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				talker.handleMessage(event.getActionCommand(), getName());
@@ -156,7 +166,26 @@ public class Room {
 		mainPanel = new JPanel(new BorderLayout());
 		
 		users = new DefaultListModel<String>();
-		userWindow = new JList<String>(users); 
+		userWindow = new JList<String>(users);
+		
+		Action action = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JList<String> list = (JList<String>) e.getSource();
+				server.addPrivChat(fixName(list.getSelectedValue()));
+			}
+		};
+		
+		userWindow.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent evt) {
+		        JList<String> list = (JList<String>)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+		            server.addPrivChat(fixName(list.getSelectedValue()));
+		        }
+		    }
+		});
+		
+		ListAction la = new ListAction(userWindow, action);
 		
 		outerUserWindow = new JScrollPane(userWindow);
 		outerUserWindow.setPreferredSize(new Dimension(175, 500));
@@ -166,6 +195,13 @@ public class Room {
 		
 		mainPanel.setBackground(Color.WHITE);
 		mainPanel.setSize(800, 600);
+	}
+	
+	private String fixName(String name) {
+		if (name.startsWith("@") || name.startsWith("+")) {
+			name = name.substring(1);
+		}
+		return name;
 	}
 	
 	private void initServerTalk() {
@@ -178,7 +214,22 @@ public class Room {
 		
 		mainPanel = new JPanel(new BorderLayout());
 		mainPanel.add(new JScrollPane(chatWindow), BorderLayout.CENTER);
+		
+		userText = new JTextField();
+		userText.requestFocusInWindow();
+		userText.setEditable(false);
+		userText.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				if (event.getActionCommand().startsWith("/")) {
+					talker.handleMessage(event.getActionCommand(), getName());
+				}
+				userText.setText("");
+			}
+		});
+		mainPanel.add(userText, BorderLayout.SOUTH);
+		
 		mainPanel.setBackground(Color.WHITE);
 		mainPanel.setSize(800, 600);
 	}
+	
 }

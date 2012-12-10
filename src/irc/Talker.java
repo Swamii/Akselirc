@@ -42,6 +42,7 @@ public class Talker {
 		}
 	}
 	
+	// if there's a slash the message should be handled as a command
 	public void handleMessage(String message, String room) {
 		System.out.println(message + "-" + room);
 		if (message.startsWith("/")) {
@@ -51,10 +52,12 @@ public class Talker {
 		}
 	}
 	
+	// check the command the user has typed. i shouldn't have to check this since the irc protocol is so simple.
 	private void parseCommand(String message) {
 		if (!message.contains(" ")) {
 			return;
 		}
+		
 		String[] messageSplit = message.split(" ");
 		int messageLen = messageSplit.length;
 		
@@ -65,9 +68,31 @@ public class Talker {
 			joinRoom(room);
 		}
 		
+		if (messageSplit[0].toUpperCase().equals("PART") && messageLen < 3 && messageLen > 1) {
+			String room = message.substring(message.indexOf(" ") + 1);
+			if (room.contains(",")) {
+				String[] rooms = room.split(",");
+				for (String r : rooms) {
+					if (!r.startsWith("#")) {
+						r = "#" + r;
+					}
+					leaveRoom(r);
+					connection.getServer().removeRoom(r);
+				}
+				
+			} else {
+				if (!room.startsWith("#")) {
+					room = "#" + room;
+				}
+				leaveRoom(room);
+				connection.getServer().removeRoom(room);
+			}
+		}
+		
 		
 	}
 	
+	// send a standard message to a room
 	private void sendMessage(String message, String room) {
 		try {
 			writer.write("PRIVMSG " + room + " :" + message + "\r\n");
@@ -77,6 +102,7 @@ public class Talker {
 		}
 	}
 	
+	// sends a pong in response to a recieved ping
 	public void sendPong(String line) {
 		try {
 			writer.write("PONG " + line.substring(5) + "\r\n");
@@ -89,12 +115,11 @@ public class Talker {
 	public void leaveServer() {
 		try {
 			writer.write("QUIT :Bye bye\r\n");
-			System.out.println("Trying to leave server!");
+			System.out.println("Telling server im leaving");
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong trying to leave the server");
 		}
-		gui.removeConnection(connection);
 	}
 	
 }
