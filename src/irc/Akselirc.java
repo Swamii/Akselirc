@@ -1,5 +1,9 @@
 package irc;
 
+import java.lang.reflect.InvocationTargetException;
+
+import javax.swing.SwingUtilities;
+
 public class Akselirc {
 
 	/**
@@ -7,12 +11,7 @@ public class Akselirc {
 	 */
 	public static void main(String[] args) {
 		GUI gui = new GUI();
-		initPrefs();
 		gui.initGUI();
-	}
-
-	private static void initPrefs() {
-		
 	}
 	
 }

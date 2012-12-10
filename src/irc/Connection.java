@@ -27,7 +27,8 @@ public class Connection implements Runnable {
 	private Talker talker;
 	private Listener listener;
 	private Thread thread;
-	private volatile Boolean allGood = false;
+	private boolean allGood = false;
+	private boolean allBad = false;
 	private String startupRooms;
 
 	public Connection(String nick, String server, String rooms) {
@@ -46,6 +47,10 @@ public class Connection implements Runnable {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		} catch (IOException e) {
 			gui.errorPopup("Something went wrong connecting to " + server);
+			synchronized(this) {
+				allBad = true;
+				this.notifyAll();
+			}
 			gui.removeConnection(this);
 			return;
 		}
@@ -92,11 +97,19 @@ public class Connection implements Runnable {
 					break;
 				} else if (line.indexOf("433") >= 0) {
 					gui.errorPopup("Nickname is already in use");
+					synchronized(this) {
+						allBad = true;
+						this.notifyAll();
+					}
 					gui.removeConnection(this);
 					break;
 				}
 			}
 		} catch (IOException e) {
+			synchronized(this) {
+				allBad = true;
+				this.notifyAll();
+			}
 			gui.errorPopup("Something happened");
 		}
 		
@@ -152,6 +165,10 @@ public class Connection implements Runnable {
 	
 	public boolean allGood() {
 		return allGood;
+	}
+	
+	public boolean allBad() {
+		return allBad;
 	}
 	
 	// lots of gets since this is the hub for each connection

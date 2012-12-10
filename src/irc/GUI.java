@@ -22,11 +22,11 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 public class GUI extends JFrame {
 	
-	private static final long serialVersionUID = -6734790752015365789L;
+	private static final long serialVersionUID = 1L;
 	public static GUI gui;
 	private final static int WIDTH = 800;
 	private final static int HEIGHT = 600;
-	private ArrayList<Connection> connections = new ArrayList<Connection>();
+	private volatile ArrayList<Connection> connections = new ArrayList<Connection>();
 	private JFrame frame;
 	private JTabbedPane jtp;
 	private JMenuBar menubar;
@@ -66,7 +66,7 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	private void loadPrefs() {
+	public void loadPrefs() {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		ArrayList<String[]> prefsList = new ArrayList<String[]>();
         ArrayList<String> keys = new ArrayList<String>();
@@ -99,13 +99,13 @@ public class GUI extends JFrame {
 		} catch (BackingStoreException e) {
 			errorPopup("Failed to load preferences. Error code 1337.");
 		}
-		
+		System.out.println(prefsList.size());
 		for (String[] list : prefsList) {
 			Connection connection = new Connection(list[1], list[0], list[2]);
 			synchronized(connection) {
 				Thread t = new Thread(connection);
 				t.start();
-				while (!connection.allGood()) {
+				while (!connection.allGood() && !connection.allBad()) {
 					try {
 						connection.wait();
 					} catch (InterruptedException e) {
@@ -153,7 +153,6 @@ public class GUI extends JFrame {
 			    error,
 			    "Error",
 			    JOptionPane.ERROR_MESSAGE);
-	
 	}
 
 	public void initGUI() {

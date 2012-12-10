@@ -70,15 +70,12 @@ public class Listener implements Runnable {
 		
 		if (line.contains(connection.getNick()) && line.contains("Cannot join channel (+k)")) {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
-			System.out.println(room + " TO REMOVE");
 			Room remRoom = null;
 			for (int i = 1; i < rooms.size(); i++) {
 				if (rooms.get(i).getName().equals(room)) {
 					remRoom = rooms.get(i);
-					System.out.println("Got it!");
 				}
 			}
-			System.out.println(rooms.remove(remRoom));
 		}
 		
 		// ping pong so we don't disconnect
