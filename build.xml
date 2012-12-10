@@ -1,0 +1,168 @@
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.    
+-->
+<project name="akselirc-client" default="compile" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <!-- 
+        this build file is a self contained project: it doesn't require anything else 
+        that ant 1.6.2 or greater and java 1.4 or greater properly installed.
+        
+        It is used to showcase how easy and straightforward it can be to use Ivy.
+        
+        This is not an example of the best pratice to use in a project, especially
+        for the java source code "generation" :-) (see generate-src target)
+        
+        To run copy this file in an empty directory, open a shell or a command window
+        in this directory and run "ant". It will download ivy and then use it to resolve 
+        the dependency of the class which is itself "contained" in this build script.
+        
+        After a successful build run "ant" again and you will see the build will be
+        much faster.
+        
+        More information can be found at http://ant.apache.org/ivy/
+        -->
+
+    <!-- here is the version of ivy we will use. change this property to try a newer
+version if you want -->
+    <property name="ivy.install.version" value="2.0.0-beta1" />
+    <property name="ivy.jar.dir" value="${basedir}/lib" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+    <property name="build.dir" value="build" />
+    <property name="build.dir.classes" value="${build.dir}/classes" />
+    <property name="src.dir" value="src" />
+    <property name="lib.dir" value="${basedir}/lib" />
+    <property name="dist.dir" value="${basedir}/dist" />
+
+    <property name="jar.name" value="akselirc.jar" />
+    <property name="main.class" value="irc.Akselirc" />
+
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="${build.dir}">
+            <include name="*.class" />
+        </fileset>
+    </path>
+
+    <fileset id="resources" dir="${src.dir}">
+        <include name="**/*.properties"/>
+        <include name="**/*.gif"/>
+        <include name="**/*.jpg"/>
+        <include name="**/*.png"/>
+    </fileset>
+
+    <target name="download-ivy" unless="skip.download">
+        <mkdir dir="${ivy.jar.dir}"/>
+        <!-- download Ivy from web site so that it can be used even without any special installation -->
+        <echo message="installing ivy..."/>
+        <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <!-- =================================
+    target: install-ivy
+      this target is not necessary if you put ivy.jar in your ant lib directory
+      if you already have ivy in your ant lib, you can simply remove this
+      target and the dependency the 'go' target has on it
+   ================================= -->
+    <target name="install-ivy" depends="download-ivy" description="--> install ivy">
+        <!-- try to load ivy here from local ivy dir, in case the user has not already dropped
+                it into ant's lib dir (note that the latter copy will always take precedence).
+                We will not fail as long as the ivy jar is in at least one of ant's lib dir or
+                the local lib dir. -->
+        <path id="ivy.lib.path">
+            <pathelement location="${ivy.jar.file}"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+    <!-- =================================
+    target: go
+              Go ivy, go!
+   ================================= -->
+    <target name="compile" depends="install-ivy, install-dependencies"
+            description="--> compile project">
+        <echo message="compiling..."/>
+        <mkdir dir="${build.dir.classes}" />
+        <javac srcdir="${src.dir}" destdir="${build.dir.classes}" classpathref="classpath" includeAntRuntime="false"/>
+    </target>
+
+    <target name="install-dependencies" depends="install-ivy" description="--> resolve dependencies">
+        <echo message="Resolving dependencies"/>
+        <ivy:retrieve />
+    </target>
+
+
+
+    <target name="package" depends="compile">
+        <echo message="building jar..."/>
+
+        <pathconvert property="libs.project" pathsep=" ">
+            <mapper>
+                <chainedmapper>
+                    <!-- remove absolute path -->
+                    <flattenmapper />
+
+                    <!-- add lib/ prefix -->
+                    <globmapper from="*" to="lib/*" />
+                </chainedmapper>
+            </mapper>
+            <path>
+                <!-- lib.home contains all jar files,
+             in several subdirectories -->
+                <fileset dir="${lib.dir}">
+                    <include name="**/*.jar" />
+                </fileset>
+            </path>
+        </pathconvert>
+        <mkdir dir="${dist.dir}" />
+
+        <!-- create the jar -->
+        <jar jarfile="${dist.dir}/${jar.name}" basedir="${build.dir}/classes">
+
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Main-Class" value="${main.class}" />
+
+                <!-- Finally, use the generated libs path -->
+                <attribute name="Class-Path" value="${libs.project}" />
+            </manifest>
+            <fileset refid="resources"/>
+            <zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
+        </jar>
+    </target>
+
+    <!-- =================================
+    target: clean-ivy
+   ================================= -->
+    <target name="clean-ivy" description="--> clean the ivy installation">
+        <delete dir="${ivy.jar.dir}"/>
+    </target>
+
+    <!-- ================================= 
+    target: clean-cache
+   ================================= -->
+    <target name="clean-cache" depends="install-ivy"
+            description="--> clean the ivy cache">
+        <ivy:cleancache />
+    </target>
+</project>

@@ -1,0 +1,5 @@
+<ivy-module version="2.0">
+    <info organisation="org.apache" module="akselirc-client"/>
+    <dependencies>
+    </dependencies>
+</ivy-module>
