@@ -44,6 +44,14 @@ public class RoomPopup extends JDialog {
 		initGUI();
 	}
 	
+	// 'constructor', makes sure there is only one instance of the dialog
+		public static RoomPopup getInstance() {
+			if (RoomPopupInstance == null) {
+				RoomPopupInstance = new RoomPopup();
+			}
+			return RoomPopupInstance;
+		}
+	
 	private void initGUI() {
 		ArrayList<Connection> connections = gui.getConnections();
 		
@@ -119,17 +127,10 @@ public class RoomPopup extends JDialog {
 		setResizable(false);
 		pack();
 		setLocationRelativeTo(getParent());
-		// the line under makes sure the roomField gets focus so you can start writing instantly
+		// make sure the roomField gets focus so you can start writing instantly
 		roomField.requestFocusInWindow();
 		setVisible(true);
 		
-	}
-	
-	public static RoomPopup getInstance() {
-		if (RoomPopupInstance == null) {
-			RoomPopupInstance = new RoomPopup();
-		}
-		return RoomPopupInstance;
 	}
 	
 	private void join() {

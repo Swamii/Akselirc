@@ -1,7 +1,5 @@
 package irc;
 
-import javax.swing.SwingUtilities;
-
 public class Akselirc {
 
 	/**

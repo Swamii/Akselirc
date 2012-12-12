@@ -16,6 +16,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -33,15 +34,7 @@ public class GUI extends JFrame {
 	private JMenuItem joinRoom;
 	private JMenu file;
 	private JMenu edit;
-	private volatile boolean connected;
 	
-	public ArrayList<Connection> getConnections() {
-		return connections;
-	}
-	
-	public int getSelectedTab() {
-		return jtp.getSelectedIndex();
-	}
 	
 	// function for exiting one connection
 	public void removeConnection(Connection connection) {
@@ -125,7 +118,6 @@ public class GUI extends JFrame {
 				System.out.println("done..");
 			}
 		}
-		connected = true;
 	}
 	
 	public void addConnection(Connection connection) {
@@ -141,9 +133,14 @@ public class GUI extends JFrame {
 	}
 	
 	// called by connection when a connection to a server has been established
-	public void addServer(Server server) {
-		jtp.add(server.getName(), server.getPanel());
-		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
+	public void addServer(final Server server) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				jtp.add(server.getName(), server.getPanel());
+				jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
+			}
+		});
 	}
 	
 	private void serverPopup() {
@@ -160,34 +157,43 @@ public class GUI extends JFrame {
 	
 	// popup-function which gets called if the listener has heard that a room
 	// the client tried to join requires a password.
-	public void roomPwdPopup(String room, Connection connection) {
-		while (!connected) {}
-		String text = (String) JOptionPane.showInputDialog(this, 
-				room + " (" + connection.getServerName() + ")" + " requires a password. " +
-						"Please enter it below.", "Enter password", 
-						JOptionPane.PLAIN_MESSAGE, null, null, null);
-		if (text != null) {
-			connection.addRoom(room + " " + text);
-		}
+	public void roomPwdPopup(final String room, final Connection connection) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				String pwd = (String) JOptionPane.showInputDialog(connection.getServer().getPanel(), 
+						room + " (" + connection.getServerName() + ")" + " requires a password. " +
+								"Please enter it below.", "Enter password", 
+								JOptionPane.PLAIN_MESSAGE, null, null, null);
+				if (pwd != null && pwd.length() > 0) {
+					connection.addRoom(room + " " + pwd);
+				}
+			}
+		});
 	}
 
 	// simple error popup
-	public void errorPopup(String error) {
-		while (!connected) {}
-		JOptionPane.showMessageDialog(frame,
-			    error,
-			    "Error",
-			    JOptionPane.ERROR_MESSAGE);
+	public void errorPopup(final String error) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				JOptionPane.showMessageDialog(frame,
+					    error,
+					    "Error",
+					    JOptionPane.ERROR_MESSAGE);
+			}
+		});
 	}
 
 	public void initGUI() {
-		connected = false;
 		gui = this;
 		
+		// set look and feel to nimbus, it is doesn't exist, go with standard crossplatform
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {
 		            UIManager.setLookAndFeel(info.getClassName());
+		            // remove highlight for tabs
 		            UIManager.put("nimbusFocus", new Color(0,0,0,0));
 		            break;
 		        }
@@ -258,8 +264,7 @@ public class GUI extends JFrame {
 		WindowClosingListener windowListener = new WindowClosingListener();
 		addWindowListener(windowListener);
 		setVisible(true);
-		
-		
+			
 	}
 	
 	// when the program is quitting
@@ -281,6 +286,14 @@ public class GUI extends JFrame {
 	
 	public void enableJoinRoomMenuItem(boolean b) {
 		joinRoom.setEnabled(b);
+	}
+	
+	public ArrayList<Connection> getConnections() {
+		return connections;
+	}
+	
+	public int getSelectedTab() {
+		return jtp.getSelectedIndex();
 	}
 	
 	private class WindowClosingListener implements WindowListener {

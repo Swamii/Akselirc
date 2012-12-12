@@ -40,25 +40,46 @@ public class Connection implements Runnable {
 		gui = GUI.gui;
 	}
 	
+	
+	
 	public void run() {
 		// add this connection to the array, so the gui can keep track of it
+		final Connection connection = this;
 		gui.addConnection(this);
 		System.out.println("1");
 		socket = new Socket();
 		SocketAddress socketAddress = new InetSocketAddress(server, 6667);
+		new java.util.Timer().schedule(
+		        new java.util.TimerTask() {
+		            @Override
+		            public void run() {
+		                if (!socket.isConnected()) {
+		                	System.out.println("not connected..");
+		        			synchronized(connection) {
+		        				allBad = true;
+		        				connection.notifyAll();
+		        			}
+		        			gui.removeConnection(connection);
+		        			gui.errorPopup("Connection timed out to: " + server);
+		        			return;
+		                } else {
+		                	System.out.println("connected..");
+		                }
+		            }
+		        }, 5000);
+		
 		try {
+			System.out.println("1.2");
 			socket.connect(socketAddress, 5000);
 			System.out.println("1.5");
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			System.out.println("2");
 		} catch (IOException e) {
-			gui.errorPopup("Connection timed out to: " + server);
-			synchronized(this) {
-				allBad = true;
-				this.notifyAll();
-			}
-			gui.removeConnection(this);
+			return;
+		}
+		
+		if (!socket.isConnected()) {
 			return;
 		}
 		
@@ -70,19 +91,21 @@ public class Connection implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("3");
+		
 		// create talker and listener
 		talker = new Talker(this);
 		listener = new Listener(this);
+		
 		// create the server talk room which displays server messages.
 		Room r = new Room(this);
 		rooms.add(r);
 		s = new Server(this);
+		
 		// add the server talk "room" to the server (the inner jtabbedpane)
 		s.addServerTalk(r);
+		
 		// add the server to the gui
 		gui.addServer(s);
-		System.out.println("4");
 		String line;
 		try {
 			// read lines from server and respond accordingly
@@ -103,7 +126,7 @@ public class Connection implements Runnable {
 					startListener();
 					break;
 				} else if (line.indexOf("433") >= 0) {
-					gui.errorPopup("Nickname is already in use");
+					gui.errorPopup("Nickname is already in use on: " + server);
 					synchronized(this) {
 						allBad = true;
 						this.notifyAll();
@@ -124,6 +147,7 @@ public class Connection implements Runnable {
 		
 	}
 	
+	// start listener, join any rooms added to preferences.
 	private void startListener() {
 		
 		thread = new Thread(listener);
@@ -199,10 +223,6 @@ public class Connection implements Runnable {
 	
 	public String getServerName() {
 		return server;
-	}
-	
-	public GUI getGUI() {
-		return gui;
 	}
 	
 	public Listener getListener() {

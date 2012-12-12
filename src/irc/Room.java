@@ -171,8 +171,11 @@ public class Room {
 		userWindow = new JList<String>(users);
 		
 		Action action = new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				@SuppressWarnings("unchecked")
 				JList<String> list = (JList<String>) e.getSource();
 				server.addPrivChat(fixName(list.getSelectedValue()));
 			}
@@ -180,13 +183,15 @@ public class Room {
 		
 		userWindow.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent evt) {
-		        JList<String> list = (JList<String>)evt.getSource();
+		        @SuppressWarnings("unchecked")
+				JList<String> list = (JList<String>)evt.getSource();
 		        if (evt.getClickCount() == 2) {
 		            server.addPrivChat(fixName(list.getSelectedValue()));
 		        }
 		    }
 		});
 		
+		@SuppressWarnings("unused")
 		ListAction la = new ListAction(userWindow, action);
 		
 		outerUserWindow = new JScrollPane(userWindow);

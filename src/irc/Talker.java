@@ -12,7 +12,7 @@ public class Talker {
 	public Talker(Connection connection) {
 		this.connection = connection;
 		writer = connection.getWriter();
-		gui = connection.getGUI();
+		gui = GUI.gui;
 	}
 	
 	public GUI getGUI() {

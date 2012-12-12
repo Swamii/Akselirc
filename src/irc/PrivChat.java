@@ -37,6 +37,10 @@ public class PrivChat extends Room {
 		initGUI();
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	public JPanel getPanel() {
 		return panel;
 	}
@@ -79,6 +83,7 @@ public class PrivChat extends Room {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		chatWindow.setCaretPosition(document.getLength());
 	}
 	
 }

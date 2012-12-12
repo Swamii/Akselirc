@@ -1,9 +1,6 @@
 package irc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -91,9 +88,11 @@ public class PreferenceTableModel extends AbstractTableModel {
         	System.err.println("setValue err :(((");
         }
     	if (newRow) {
+    		// new row, add it to last place and tell the table there is a new row
     		prefsNotSaved.add(tempList);
     		fireTableRowsInserted(row, col);
     	} else {
+    		// update row, put it in the right place, and remove the old one
     		prefsNotSaved.add(row, tempList);
     		prefsNotSaved.remove(row + 1);
     		fireTableCellUpdated(row, col);

@@ -26,3 +26,14 @@ när exakt det blir fel innan jag kan åtgärda det.
 7 Dec:
 Har jobbat hårt på att planera och skapa en dialog för preferenser. Mycket tid har specifikt lagts på att lära mig att göra en egen
 tablemodel för jtable. Och att koppla det till java's Preferences-api.
+
+12 Dec:
+Är färdig med tablemodelen och preferences-dialogen (för nu). Man kan ställa in vilka servrar och rum man vill gå in i direkt.
+Just att gå in på flera servrar och rum, samt rita upp dom i princip samtidigt har gett flera problem. Look-and-feelen som
+hanterar uppritning är single-threaded. Har jobbat mycket på att lösa det. Har nu kommit fram till en lösning. Dels har jag
+gjort connection synchronized, så vid startup connectas en server i taget. När servern är connectad så notifias loopen utanför
+att det är ok att börja med nästa. Vad det gäller problem med att rita upp popups (error + pwd) har jag löst det lite simplare.
+Där har jag använt mig att SwingUtilities.invokeLater() som gör att popupen väntar tills inget annat ritas innan den ritas upp.
+
+Jag har skapat en popup för passwords. Om listenern hör att ett rum vi försökte gå in i kräver ett lösenord, så tar den bort rummet
+och skapar en popup med lösenord. Om man skriver in lösenord så försöker den skapa ett nytt rum med lösenordet.

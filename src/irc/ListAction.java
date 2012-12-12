@@ -13,14 +13,14 @@ import javax.swing.KeyStroke;
 public class ListAction implements MouseListener {
 
 	private final static KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-	private JList list;
+	private JList<String> list;
 	private KeyStroke keyStroke;
 		
-	public ListAction(JList list, Action action) {
+	public ListAction(JList<String> list, Action action) {
 		this(list, action, ENTER);
 	}
 		
-	public ListAction(JList list, Action action, KeyStroke keyStroke) {
+	public ListAction(JList<String> list, Action action, KeyStroke keyStroke) {
 		this.list = list;
 		this.keyStroke = keyStroke;
 			
