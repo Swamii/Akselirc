@@ -68,6 +68,8 @@ public class Listener implements Runnable {
 		server = connection.getServer();
 		System.out.println(line);
 		
+		
+		// tried to join a room with a password, without supplying one.
 		if (line.contains(connection.getNick()) && line.contains("Cannot join channel (+k)")) {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
 			Room remRoom = null;
@@ -75,6 +77,10 @@ public class Listener implements Runnable {
 				if (rooms.get(i).getName().equals(room)) {
 					remRoom = rooms.get(i);
 				}
+			}
+			if (remRoom != null) {
+				connection.removeRoom(remRoom);
+				GUI.gui.roomPwdPopup(room, connection);
 			}
 		}
 		
@@ -153,15 +159,18 @@ public class Listener implements Runnable {
 			System.out.println(channel + "-!PART!-" + name);
 			for (int i = 1; i < rooms.size(); i++) {
 				// check if that user is the client and that we are in the right room in the loop
+				Room r = null;
 				if (channel.equals(rooms.get(i).getName()) && name.equals(connection.getNick())) {
-					System.out.println(rooms.get(i).getName() + " removed from list of rooms!");
-					rooms.remove(i);
+					r = rooms.get(i);
+					connection.removeRoom(r);
+					break;
 				}
 				// check all other users leaving
 				else if (channel.equals(rooms.get(i).getName())) {
 					rooms.get(i).removeUser(name);
 					rooms.get(i).addMessage(name + " has left " + channel);
 					System.out.println("Removing " + name);
+					break;
 				}
 			}
 		}

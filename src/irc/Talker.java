@@ -65,7 +65,6 @@ public class Talker {
 			String room = message.substring(message.indexOf(" ") + 1);
 			if (!room.startsWith("#")) room = "#" + room;
 			connection.addRoom(room);
-			joinRoom(room);
 		}
 		
 		if (messageSplit[0].toUpperCase().equals("PART") && messageLen < 3 && messageLen > 1) {

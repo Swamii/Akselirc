@@ -97,6 +97,7 @@ public class Room {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		chatWindow.setCaretPosition(document.getLength());
 	}
 	
 	public void addMessage(String text) {
@@ -106,6 +107,7 @@ public class Room {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		chatWindow.setCaretPosition(document.getLength());
 	}
 
 	public void addUser(String user) {

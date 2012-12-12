@@ -5,7 +5,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 
 /**
@@ -41,12 +43,17 @@ public class Connection implements Runnable {
 	public void run() {
 		// add this connection to the array, so the gui can keep track of it
 		gui.addConnection(this);
+		System.out.println("1");
+		socket = new Socket();
+		SocketAddress socketAddress = new InetSocketAddress(server, 6667);
 		try {
-			socket = new Socket(server, 6667);
+			socket.connect(socketAddress, 5000);
+			System.out.println("1.5");
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			System.out.println("2");
 		} catch (IOException e) {
-			gui.errorPopup("Something went wrong connecting to " + server);
+			gui.errorPopup("Connection timed out to: " + server);
 			synchronized(this) {
 				allBad = true;
 				this.notifyAll();
@@ -63,7 +70,7 @@ public class Connection implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("3");
 		// create talker and listener
 		talker = new Talker(this);
 		listener = new Listener(this);
@@ -75,7 +82,7 @@ public class Connection implements Runnable {
 		s.addServerTalk(r);
 		// add the server to the gui
 		gui.addServer(s);
-		
+		System.out.println("4");
 		String line;
 		try {
 			// read lines from server and respond accordingly
@@ -110,7 +117,9 @@ public class Connection implements Runnable {
 				allBad = true;
 				this.notifyAll();
 			}
-			gui.errorPopup("Something happened");
+			gui.errorPopup("Something happened and its not good.");
+			gui.removeConnection(this);
+			return;
 		}
 		
 	}
@@ -132,11 +141,9 @@ public class Connection implements Runnable {
 			if (startupRooms.contains(",")) {
 				for (String s : startupRooms.split(",")) {
 					addRoom(s);
-					talker.joinRoom(s);
 				}
 			} else {
 				addRoom(startupRooms);
-				talker.joinRoom(startupRooms);
 			}
 		}
 	}
@@ -147,10 +154,16 @@ public class Connection implements Runnable {
 			String[] roomInfo = room.split(" ");
 			Room r = new Room(roomInfo[0], roomInfo[1], this);
 			rooms.add(r);
+			talker.joinRoom(room);
 		} else {
 			Room r = new Room(room, this);
 			rooms.add(r);
+			talker.joinRoom(room);
 		}
+	}
+	
+	public void removeRoom(Room r) {
+		rooms.remove(r);
 	}
 	
 	public void closeCrap() {

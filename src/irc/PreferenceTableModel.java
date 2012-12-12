@@ -10,53 +10,11 @@ import javax.swing.table.AbstractTableModel;
 public class PreferenceTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
 	private String[] columnNames = {"Server", "Nick", "Rooms"};
-    private Preferences prefs = Preferences.userNodeForPackage(getClass());
-    private ArrayList<String> keys;
-    private ArrayList<String> allKeys;
     private ArrayList<String[]> prefsNotSaved;
 
     public PreferenceTableModel(){
-        loadPrefs();
+        prefsNotSaved = GUI.gui.loadPrefs();
     }
-    
-    /*
-     * this function loads the preferences from the computer, it ultimately puts them in a 2-dimensional array
-     * with the order 'server', 'nick', 'rooms'
-     */
-    private void loadPrefs() {
-    	try {
-            //prefs.clear();
-        	prefsNotSaved = new ArrayList<String[]>();
-            keys = new ArrayList<String>();
-            allKeys = new ArrayList<String>(Arrays.asList(prefs.keys()));
-            // allKeys we have all the preferences, but the only ones we need are those related to startup-connections
-            for (String k : allKeys) {
-            	if (k.startsWith("irc.")) {
-            		keys.add(k);
-            	}
-            }
-            for (int i = 0; i < keys.size(); i++) {
-            	String[] tempList = new String[3];
-            	tempList[0] = keys.get(i);
-            	String nickRoom = prefs.get(keys.get(i), "err");
-            	if (!nickRoom.equals("err") && nickRoom.contains(":")) {
-            		if (nickRoom.endsWith(":")) {
-            			tempList[1] = nickRoom.substring(0, nickRoom.length() - 1);
-            			tempList[2] = "";
-            		} else {
-            			String[] nickRoomSplit = nickRoom.split(":");
-                		tempList[1] = nickRoomSplit[0];
-                		tempList[2] = nickRoomSplit[1];
-            		}
-            		
-            	}
-            	prefsNotSaved.add(tempList);
-            }
-        } catch (BackingStoreException e) {
-            e.printStackTrace();
-        }
-    }
-    
 
     @Override
     public String getColumnName(int column) {

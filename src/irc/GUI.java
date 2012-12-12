@@ -33,6 +33,7 @@ public class GUI extends JFrame {
 	private JMenuItem joinRoom;
 	private JMenu file;
 	private JMenu edit;
+	private volatile boolean connected;
 	
 	public ArrayList<Connection> getConnections() {
 		return connections;
@@ -66,7 +67,7 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	public void loadPrefs() {
+	public ArrayList<String[]> loadPrefs() {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		ArrayList<String[]> prefsList = new ArrayList<String[]>();
         ArrayList<String> keys = new ArrayList<String>();
@@ -99,22 +100,32 @@ public class GUI extends JFrame {
 		} catch (BackingStoreException e) {
 			errorPopup("Failed to load preferences. Error code 1337.");
 		}
+		return prefsList;
+		
+	}
+	
+	// this function starts all the connections to the servers specified in the preferences window
+	public void initStartupConnections() {
+		ArrayList<String[]> prefsList = loadPrefs();
 		System.out.println(prefsList.size());
 		for (String[] list : prefsList) {
 			Connection connection = new Connection(list[1], list[0], list[2]);
 			synchronized(connection) {
 				Thread t = new Thread(connection);
 				t.start();
+				// needs to wait for the first connection to be done, since look and feels is single-threaded
 				while (!connection.allGood() && !connection.allBad()) {
 					try {
+						System.out.println("waiting..");
 						connection.wait();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
+				System.out.println("done..");
 			}
 		}
-		
+		connected = true;
 	}
 	
 	public void addConnection(Connection connection) {
@@ -135,20 +146,34 @@ public class GUI extends JFrame {
 		jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
 	}
 	
-	public void serverPopup() {
+	private void serverPopup() {
 		ServerPopup serverPopup = ServerPopup.getInstance();
 		serverPopup.setVisible(false);
 		serverPopup.setVisible(true);
 	}
 	
-	public void roomPopup() {
+	private void roomPopup() {
 		RoomPopup roomPopup = RoomPopup.getInstance();
 		roomPopup.setVisible(false);
 		roomPopup.setVisible(true);
 	}
 	
+	// popup-function which gets called if the listener has heard that a room
+	// the client tried to join requires a password.
+	public void roomPwdPopup(String room, Connection connection) {
+		while (!connected) {}
+		String text = (String) JOptionPane.showInputDialog(this, 
+				room + " (" + connection.getServerName() + ")" + " requires a password. " +
+						"Please enter it below.", "Enter password", 
+						JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (text != null) {
+			connection.addRoom(room + " " + text);
+		}
+	}
+
 	// simple error popup
 	public void errorPopup(String error) {
+		while (!connected) {}
 		JOptionPane.showMessageDialog(frame,
 			    error,
 			    "Error",
@@ -156,7 +181,9 @@ public class GUI extends JFrame {
 	}
 
 	public void initGUI() {
+		connected = false;
 		gui = this;
+		
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {
@@ -231,7 +258,7 @@ public class GUI extends JFrame {
 		WindowClosingListener windowListener = new WindowClosingListener();
 		addWindowListener(windowListener);
 		setVisible(true);
-		loadPrefs();
+		
 		
 	}
 	

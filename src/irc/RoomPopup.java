@@ -140,7 +140,6 @@ public class RoomPopup extends JDialog {
 			if (server.equals(gui.getConnections().get(i).getServerName())) {
 				destroy();
 				gui.getConnections().get(i).addRoom(room);
-				gui.getConnections().get(i).getTalker().joinRoom(room);
 			}
 		}
 	}
