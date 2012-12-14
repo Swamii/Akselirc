@@ -1,4 +1,6 @@
-package irc;
+package irc.connection;
+
+import irc.gui.GUI;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,13 +16,39 @@ public class Talker {
 		writer = connection.getWriter();
 		gui = GUI.gui;
 	}
-	
-	public GUI getGUI() {
-		return gui;
-	}
-	
-	public Connection getConnection() {
-		return connection;
+
+	// check the command the user has typed. i shouldn't have to check this since the irc protocol is so simple.
+	private void parseCommand(String message, String senderRoom) {
+
+		if (message.toUpperCase().equals("PART")) leaveRoom(senderRoom);
+
+		if (!message.contains(" ")) return;
+
+		String[] messageSplit = message.split(" ");
+		String command = messageSplit[0].toUpperCase();
+		String item = messageSplit[1];
+
+		if (command.equals("JOIN")) {
+			String room = message.substring(message.indexOf(" ") + 1);
+			System.out.println("ROOM: " + room);
+			if (!room.startsWith("#")) room = "#" + room;
+			connection.addRoom(room);
+		}
+
+		if (command.equals("PART")) {
+			String room = item;
+			if (room.contains(",")) {
+				String[] rooms = room.split(",");
+				for (String r : rooms) {
+					if (!r.startsWith("#")) r = "#" + r;
+					leaveRoom(r);
+				}	
+			} else {
+				if (!room.startsWith("#")) room = "#" + room;
+				leaveRoom(room);
+			}
+		}
+
 	}
 
 	public void joinRoom(String room) {
@@ -34,61 +62,22 @@ public class Talker {
 	
 	public void leaveRoom(String name) {
 		try {
-			System.out.println("PART " + name + "\'r\'n");
 			writer.write("PART " + name + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong trying to leave the room");
 		}
+		connection.getServer().removeRoom(name);
 	}
 	
 	// if there's a slash the message should be handled as a command
 	public void handleMessage(String message, String room) {
 		System.out.println(message + "-" + room);
 		if (message.startsWith("/")) {
-			parseCommand(message.substring(1));
+			parseCommand(message.substring(1), room);
 		} else {
 			sendMessage(message, room);
 		}
-	}
-	
-	// check the command the user has typed. i shouldn't have to check this since the irc protocol is so simple.
-	private void parseCommand(String message) {
-		if (!message.contains(" ")) {
-			return;
-		}
-		
-		String[] messageSplit = message.split(" ");
-		int messageLen = messageSplit.length;
-		
-		if (messageSplit[0].toUpperCase().equals("JOIN") && messageLen < 4 && messageLen > 1 ) {
-			String room = message.substring(message.indexOf(" ") + 1);
-			if (!room.startsWith("#")) room = "#" + room;
-			connection.addRoom(room);
-		}
-		
-		if (messageSplit[0].toUpperCase().equals("PART") && messageLen < 3 && messageLen > 1) {
-			String room = message.substring(message.indexOf(" ") + 1);
-			if (room.contains(",")) {
-				String[] rooms = room.split(",");
-				for (String r : rooms) {
-					if (!r.startsWith("#")) {
-						r = "#" + r;
-					}
-					leaveRoom(r);
-					connection.getServer().removeRoom(r);
-				}
-				
-			} else {
-				if (!room.startsWith("#")) {
-					room = "#" + room;
-				}
-				leaveRoom(room);
-				connection.getServer().removeRoom(room);
-			}
-		}
-		
-		
 	}
 	
 	// send a standard message to a room
@@ -119,6 +108,14 @@ public class Talker {
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong trying to leave the server");
 		}
+	}
+	
+	public GUI getGUI() {
+		return gui;
+	}
+	
+	public Connection getConnection() {
+		return connection;
 	}
 	
 }

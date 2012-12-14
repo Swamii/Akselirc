@@ -1,4 +1,8 @@
-package irc;
+package irc.connection;
+
+import irc.gui.GUI;
+import irc.gui.Room;
+import irc.gui.Server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,6 +67,7 @@ public class Listener implements Runnable {
 	private void checkShitOutAndDoShitWithIt(String line) {
 		
 		rooms = connection.getRooms();
+		String nick = connection.getNick();
 		Room serverTalk = rooms.get(0);
 		serverTalk.addText(line);
 		server = connection.getServer();
@@ -70,7 +75,7 @@ public class Listener implements Runnable {
 		
 		
 		// tried to join a room with a password, without supplying one.
-		if (line.contains(connection.getNick()) && line.contains("Cannot join channel (+k)")) {
+		if (line.contains(nick) && line.contains("Cannot join channel (+k)")) {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
 			Room remRoom = null;
 			for (int i = 1; i < rooms.size(); i++) {
@@ -90,7 +95,7 @@ public class Listener implements Runnable {
 		}
 		
 		// recieving private message from user
-		if (line.contains(" PRIVMSG " + connection.getNick())) {
+		if (line.contains(" PRIVMSG " + nick)) {
 			String sender = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			server.addPrivChatMessage(sender, line.substring(line.indexOf(":", 5) + 1));
 		}
@@ -110,7 +115,7 @@ public class Listener implements Runnable {
 		}
 		
 		// if the client joins a channel, add the channel and stuff
-		if ((line.contains(" JOIN :#") || line.contains(" JOIN #")) && line.contains(connection.getNick())) {
+		else if (line.contains(" JOIN ") && line.contains(nick)) {
 			String channel = line.substring(line.indexOf("#"));
 			serverTalk.addText("You are now in " + channel);
 			for (int i = 1; i < rooms.size(); i++) {
@@ -122,7 +127,7 @@ public class Listener implements Runnable {
 		}
 		
 		// checking and adding all users when entering a channel
-		if (line.contains(connection.getNick() + " @ ") || line.contains(connection.getNick() + " = ")) {
+		else if (line.contains(nick + " @ ") || line.contains(nick + " = ")) {
 			String names = line.substring(line.indexOf(" :") + 2);
 			String[] listOfNames = names.split(" ");
 			for (String name : listOfNames) {
@@ -137,7 +142,7 @@ public class Listener implements Runnable {
 		}
 		
 		// if a user joins a channel
-		if (line.contains(" JOIN :") || line.contains(" JOIN ")) {
+		if (line.contains(" JOIN ")) {
 			String channel = line.substring(line.indexOf("#"));
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			if (!name.equals(connection.getNick())) {
@@ -145,18 +150,15 @@ public class Listener implements Runnable {
 				for (int i = 1; i < rooms.size(); i++) {
 					if (channel.equals(rooms.get(i).getName())) {
 						rooms.get(i).addUser(name);
-						rooms.get(i).addMessage(name + " has joined channel " + channel);
-						System.out.println("Adding " + name);
 					}
 				}
 			}
 		}
 		
 		// if a user leaves a channel
-		if (line.contains(" PART ")) {
+		else if (line.contains(" PART ")) {
 			String channel = line.substring(line.indexOf("#"));
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
-			System.out.println(channel + "-!PART!-" + name);
 			for (int i = 1; i < rooms.size(); i++) {
 				// check if that user is the client and that we are in the right room in the loop
 				Room r = null;
@@ -168,14 +170,12 @@ public class Listener implements Runnable {
 				// check all other users leaving
 				else if (channel.equals(rooms.get(i).getName())) {
 					rooms.get(i).removeUser(name);
-					rooms.get(i).addMessage(name + " has left " + channel);
-					System.out.println("Removing " + name);
 					break;
 				}
 			}
 		}
 		
-		if (line.contains(" QUIT ")) {
+		else if (line.contains(" QUIT ")) {
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			if (name.equals(connection.getNick())) {
 				// if the client leaving is you!
@@ -187,6 +187,24 @@ public class Listener implements Runnable {
 					rooms.get(i).removeUser(name);
 				}
 			}
-		}		
+		}
+		
+		else if (line.contains(" INVITE ") && line.contains(nick)) {
+			String[] invLine = line.split(" ");
+			String channel = invLine[3].substring(1);
+			talker.joinRoom(channel);
+		}
+		
+		else if (line.contains(" 332 ")) {
+			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
+			String topic = line.substring(line.indexOf(":", line.indexOf(room)) + 1);
+			System.out.println(topic);
+			for (int i = 1; i < rooms.size(); i++) {
+				if (rooms.get(i).getName().equals(room))
+					rooms.get(i).addMOTD(topic);
+			}
+			
+		}
+		
 	}
 }

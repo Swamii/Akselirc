@@ -3,8 +3,6 @@ Saker att göra:
 	Preferenser:
 		- Byta färger (ev)
 		- Ljudinställningar
-		- Förinställd connection med nick och rum som ska öppnas
-		- Popup första gången, sedan sparas preferenserna på datorn (ev)
 	
 	Ljud:
 		- När någon säger ens namn borde det pinga till m.m.
@@ -25,7 +23,11 @@ Saker att göra:
 Klart:
 	Mer än en server samtidigt:
 		- Jobbigt (done) 
+
 	Privatchattar med personer
+	
+	Preferenser:
+		- Förinställd connection med nick och rum som ska öppnas
 		
 ---------------------------------------------------------------------------------------------------
 

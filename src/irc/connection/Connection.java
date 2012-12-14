@@ -1,4 +1,8 @@
-package irc;
+package irc.connection;
+
+import irc.gui.GUI;
+import irc.gui.Room;
+import irc.gui.Server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

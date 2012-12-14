@@ -37,3 +37,8 @@ Där har jag använt mig att SwingUtilities.invokeLater() som gör att popupen v
 
 Jag har skapat en popup för passwords. Om listenern hör att ett rum vi försökte gå in i kräver ett lösenord, så tar den bort rummet
 och skapar en popup med lösenord. Om man skriver in lösenord så försöker den skapa ett nytt rum med lösenordet.
+
+13 Dec: 
+Problemet att swing inte vill rita upp fler saker samtidigt återkommer. Har fått lägga till invokeLater() på flera ställen i koden.
+Har arbetat med att kunna visa upp MOTD (Message of the Day) som alla större irc-kanaler har. Har även jobbat med talkern så att man
+kan skriva något mer kommando och så att dom redan existerande fungerar bättre.

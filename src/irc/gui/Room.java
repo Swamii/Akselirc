@@ -1,4 +1,7 @@
-package irc;
+package irc.gui;
+
+import irc.connection.Connection;
+import irc.connection.Talker;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -8,15 +11,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
@@ -30,6 +34,7 @@ public class Room {
 	private JPanel chatPanel;
 	private JTextField userText;
 	private JTextPane chatWindow;
+	private JTextArea topicText;
 	private StyleContext context;
 	private StyledDocument document;
 	private Style style;
@@ -90,32 +95,52 @@ public class Room {
 		return users;
 	}
 
-	public void addText(String text) {
-		StyleConstants.setForeground(style, Color.BLACK);
-		try {
-			document.insertString(document.getLength(), text + "\n", style);
-		} catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-		chatWindow.setCaretPosition(document.getLength());
+	public void addText(final String text) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				StyleConstants.setForeground(style, Color.BLACK);
+				try {
+					document.insertString(document.getLength(), text + "\n", style);
+				} catch (BadLocationException e) {
+					e.printStackTrace();
+				}
+				chatWindow.setCaretPosition(document.getLength());
+			}
+		});
 	}
 	
-	public void addMessage(String text) {
-		StyleConstants.setForeground(style, Color.RED);
-		try {
-			document.insertString(document.getLength(), " - " + text + " - \n", style);
-		} catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-		chatWindow.setCaretPosition(document.getLength());
+	public void addMessage(final String text) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				StyleConstants.setForeground(style, Color.RED);
+				try {
+					document.insertString(document.getLength(), " - " + text + " - \n", style);
+				} catch (BadLocationException e) {
+					e.printStackTrace();
+				}
+				chatWindow.setCaretPosition(document.getLength());
+			}
+		});
+	}
+	
+	public void addMOTD(String topic) {
+		topicText.setText("Topic: " + topic);
 	}
 
-	public void addUser(String user) {
-		users.addElement(user);
-		sort(users);
-		userWindow.setModel(users);
-		outerUserWindow.revalidate();
-		outerUserWindow.repaint();
+	public void addUser(final String user) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				users.addElement(user);
+				sort(users);
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+				addMessage(user + " has joined " + name);
+			}
+		});
 	}
 	
 	private void sort(DefaultListModel<String> users) {
@@ -130,11 +155,17 @@ public class Room {
 		}
 	}
 	
-	public void removeUser(String user) {
-		users.removeElement(user);
-		userWindow.setModel(users);
-		outerUserWindow.revalidate();
-		outerUserWindow.repaint();
+	public void removeUser(final String user) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				users.removeElement(user);
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+				addMessage(user + " has left " + name);
+			}
+		});
 	}
 	
 	protected void initGUI() {
@@ -161,8 +192,16 @@ public class Room {
 		chatWindow = new JTextPane(document);
 		chatWindow.setEditable(false);
 		
+		topicText = new JTextArea();
+		topicText.setForeground(Color.BLUE);
+	    topicText.setWrapStyleWord(true);
+	    topicText.setLineWrap(true);
+	    topicText.setEditable(false);
+	    topicText.setText("Topic: ");
+		
 		chatPanel.add(userText, BorderLayout.SOUTH);
 		chatPanel.add(new JScrollPane(chatWindow), BorderLayout.CENTER);
+		chatPanel.add(topicText, BorderLayout.NORTH);
 		chatPanel.setPreferredSize(new Dimension(660, 500));
 		
 		mainPanel = new JPanel(new BorderLayout());
