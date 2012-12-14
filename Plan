@@ -53,7 +53,7 @@ Talker
 ***Popup
 	Diverse popups för till exempel nytt rum eller connection.
 ButtonTabComponent
-	"Lånad" klass som ser till att det finns ett x på tabbar så att det är lätt att stänga dom.
+	"Lånad" klass som ser till att det finns ett x på tabbar så att det är lätt att stänga dom..
 
 -----------------------------------------------------------------------------------------------------
 
