@@ -62,7 +62,7 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	public ArrayList<String[]> loadPrefs() {
+	public ArrayList<String[]> loadStartupPrefs() {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		ArrayList<String[]> prefsList = new ArrayList<String[]>();
         ArrayList<String> keys = new ArrayList<String>();
@@ -101,24 +101,18 @@ public class GUI extends JFrame {
 	
 	// this function starts all the connections to the servers specified in the preferences window
 	public void initStartupConnections() {
-		ArrayList<String[]> prefsList = loadPrefs();
+		ArrayList<String[]> prefsList = loadStartupPrefs();
 		System.out.println(prefsList.size());
-		for (String[] list : prefsList) {
-			Connection connection = new Connection(list[1], list[0], list[2]);
-			synchronized(connection) {
-				Thread t = new Thread(connection);
-				t.start();
-				// needs to wait for the first connection to be done, since look and feels is single-threaded
-				while (!connection.allGood() && !connection.allBad()) {
-					try {
-						System.out.println("waiting..");
-						connection.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+		
+		for (final String[] list : prefsList) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					Connection connection = new Connection(list[1], list[0], list[2]);
+					Thread t = new Thread(connection);
+					t.start();
 				}
-				System.out.println("done..");
-			}
+			});
 		}
 	}
 	
@@ -127,7 +121,7 @@ public class GUI extends JFrame {
 	}
 	
 	// start connection to server
-	public void newServer(String[] details) {
+	public void newConnection(String[] details) {
 		assert (details.length == 2); // i just wanted to use assert
 		Connection connection = new Connection(details[0], details[1], "");
 		Thread t = new Thread(connection);
@@ -159,7 +153,7 @@ public class GUI extends JFrame {
 	
 	// popup-function which gets called if the listener has heard that a room
 	// the client tried to join requires a password.
-	public void roomPwdPopup(final String room, final Connection connection) {
+	public void pwdPopup(final String room, final Connection connection) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -190,7 +184,7 @@ public class GUI extends JFrame {
 	public void initGUI() {
 		gui = this;
 		
-		// set look and feel to nimbus, it is doesn't exist, go with standard crossplatform
+		// set look and feel to nimbus, if it doesn't exist, go with standard crossplatform
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {

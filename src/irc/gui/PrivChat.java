@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
@@ -79,14 +80,19 @@ public class PrivChat extends Room {
 		panel.setSize(800, 600);
 	}
 	
-	public void addText(String text) {
-		StyleConstants.setForeground(style, Color.BLACK);
-		try {
-			document.insertString(document.getLength(), text + "\n", style);
-		} catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-		chatWindow.setCaretPosition(document.getLength());
+	public void addText(final String text) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				StyleConstants.setForeground(style, Color.BLACK);
+				try {
+					document.insertString(document.getLength(), text + "\n", style);
+				} catch (BadLocationException e) {
+					e.printStackTrace();
+				}
+				chatWindow.setCaretPosition(document.getLength());
+			}
+		});
 	}
 	
 }

@@ -30,7 +30,6 @@ public class Talker {
 
 		if (command.equals("JOIN")) {
 			String room = message.substring(message.indexOf(" ") + 1);
-			System.out.println("ROOM: " + room);
 			if (!room.startsWith("#")) room = "#" + room;
 			connection.addRoom(room);
 		}
@@ -107,6 +106,18 @@ public class Talker {
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong trying to leave the server");
+		}
+	}
+	
+	public void sendVersion(String nick) {
+		try {
+			//Lazors CTCP REPLY VERSION irssi v0.8.15 - running on Darwin x86_64
+			//\001VERSION #:#:#\001
+			writer.write("NOTICE " + nick + ": \001VERSION Akselirc : v0.1 : Duno\001\n\r");
+			System.out.println("Sending version");
+			writer.flush();
+		} catch (IOException e) {
+			System.err.println("VERSION went wrong.");
 		}
 	}
 	

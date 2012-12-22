@@ -8,6 +8,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
@@ -41,7 +43,6 @@ public class Room {
 	private JList<String> userWindow;
 	private DefaultListModel<String> users;
 	private JScrollPane outerUserWindow;
-	private String pwd;
 	private String name;
 	private Talker talker;
 	private Connection connection;
@@ -58,18 +59,13 @@ public class Room {
 	// constructor for normal room
 	public Room(String name, Connection connection) {
 		this.connection = connection;
-		this.name = name;
-		pwd = null;
-		talker = connection.getTalker();
-		server = connection.getServer();
-		initGUI();
-	}
-	
-	// constructor for normal room with pwd
-	public Room(String name, String pwd, Connection connection) {
-		this.connection = connection;
-		this.name = name; 
-		this.pwd = pwd;
+		
+		// check if the room has a password
+		if (name.contains(" ")) {
+			this.name = name.split(" ")[0];
+		} else {
+			this.name = name;
+		}
 		talker = connection.getTalker();
 		server = connection.getServer();
 		initGUI();
@@ -77,22 +73,6 @@ public class Room {
 	
 	public void setEditable(boolean b) {
 		userText.setEditable(b);
-	}
-
-	public JPanel getPanel() {
-		return mainPanel;
-	}
-
-	public String getName() {
-		return name;
-	}
-	
-	protected String getPwd() {
-		return pwd;
-	}
-	
-	public DefaultListModel<String> getUsers() {
-		return users;
 	}
 
 	public void addText(final String text) {
@@ -125,10 +105,18 @@ public class Room {
 		});
 	}
 	
-	public void addMOTD(String topic) {
-		topicText.setText("Topic: " + topic);
+	public void addMOTD(final String topic) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				topicText.setText("Topic: " + topic);
+				topicText.setVisible(true);
+			}
+		});
+		
 	}
-
+	
+	// used to add a single user who enters the room
 	public void addUser(final String user) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -143,6 +131,23 @@ public class Room {
 		});
 	}
 	
+	// used to add all users when first entering a room
+	public void addAllUsers(final String[] listOfUsers) {
+		for (String user : listOfUsers) {
+			users.addElement(user);
+		}
+		sort(users);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
+	}
+	
+	// very bad sorting function
 	private void sort(DefaultListModel<String> users) {
 		String[] userArray = new String[users.size()];
 		for (int i = 0; i < users.size(); i++) {
@@ -156,10 +161,10 @@ public class Room {
 	}
 	
 	public void removeUser(final String user) {
+		users.removeElement(user);
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				users.removeElement(user);
 				userWindow.setModel(users);
 				outerUserWindow.revalidate();
 				outerUserWindow.repaint();
@@ -169,12 +174,13 @@ public class Room {
 	}
 	
 	protected void initGUI() {
-		
+		ButtonListener buttonListener = new ButtonListener();
 		chatPanel = new JPanel(new BorderLayout());
 		
 		userText = new JTextField();
 		userText.setEditable(false);
 		userText.requestFocusInWindow();
+		userText.addKeyListener(buttonListener);
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				talker.handleMessage(event.getActionCommand(), getName());
@@ -198,6 +204,7 @@ public class Room {
 	    topicText.setLineWrap(true);
 	    topicText.setEditable(false);
 	    topicText.setText("Topic: ");
+	    topicText.setVisible(false);
 		
 		chatPanel.add(userText, BorderLayout.SOUTH);
 		chatPanel.add(new JScrollPane(chatWindow), BorderLayout.CENTER);
@@ -259,7 +266,8 @@ public class Room {
 		chatWindow.setEditable(false);
 		
 		mainPanel = new JPanel(new BorderLayout());
-		mainPanel.add(new JScrollPane(chatWindow), BorderLayout.CENTER);
+		JScrollPane scrollPane = new JScrollPane(chatWindow);
+		mainPanel.add(scrollPane, BorderLayout.CENTER);
 		
 		userText = new JTextField();
 		userText.requestFocusInWindow();
@@ -276,6 +284,40 @@ public class Room {
 		
 		mainPanel.setBackground(Color.WHITE);
 		mainPanel.setSize(800, 600);
+	}
+	
+	public JPanel getPanel() {
+		return mainPanel;
+	}
+
+	public String getName() {
+		return name;
+	}
+	
+	public DefaultListModel<String> getUsers() {
+		return users;
+	}
+	
+	private class ButtonListener implements KeyListener {
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_TAB) {
+				System.out.println("TAB!");
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 }

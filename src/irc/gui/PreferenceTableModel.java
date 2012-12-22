@@ -10,7 +10,7 @@ public class PreferenceTableModel extends AbstractTableModel {
     private ArrayList<String[]> prefsNotSaved;
 
     public PreferenceTableModel(){
-        prefsNotSaved = GUI.gui.loadPrefs();
+        prefsNotSaved = GUI.gui.loadStartupPrefs();
     }
 
     @Override

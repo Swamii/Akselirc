@@ -108,18 +108,21 @@ public class ButtonTabComponent extends JPanel {
         public void actionPerformed(ActionEvent e) {
             int i = pane.indexOfTabComponent(ButtonTabComponent.this);
             if (i != -1) {
+            	
+            	// leaving server
             	if (pane.getTitleAt(i).startsWith("irc.")) {
-            		// leaving server
-            		System.out.println("Clicking the x on " + pane.getTitleAt(i));
             		talker.leaveServer();
             		GUI.gui.removeConnection(talker.getConnection());
-            	} else if (pane.getTitleAt(i).startsWith("#")) {
-            		// leaving room
+            	} 
+            	
+            	// leaving room
+            	else if (pane.getTitleAt(i).startsWith("#")) {
             		talker.leaveRoom(pane.getTitleAt(i));
-            	} else {
-            		// leaving private chat
-            		talker.getConnection().getServer().removePrivChat(pane.getTitleAt(i));
-            		pane.remove(i);
+            	} 
+            	
+            	// leaving private chat
+            	else {
+            		talker.getConnection().getServer().removePrivChat(i);
             	}
             }
         }

@@ -115,7 +115,7 @@ public class ServerPopup extends JDialog {
 		details[0] = nickField.getText();
 		details[1] = serverField.getText();
 		destroy();
-		gui.newServer(details);
+		gui.newConnection(details);
 	}
 	
 	private void destroy() {

@@ -85,7 +85,7 @@ public class Listener implements Runnable {
 			}
 			if (remRoom != null) {
 				connection.removeRoom(remRoom);
-				GUI.gui.roomPwdPopup(room, connection);
+				GUI.gui.pwdPopup(room, connection);
 			}
 		}
 		
@@ -97,7 +97,12 @@ public class Listener implements Runnable {
 		// recieving private message from user
 		if (line.contains(" PRIVMSG " + nick)) {
 			String sender = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
-			server.addPrivChatMessage(sender, line.substring(line.indexOf(":", 5) + 1));
+			String message = line.substring(line.indexOf(":", 5) + 1);
+			if (line.contains("VERSION")) {
+				talker.sendVersion(sender);
+			} else {
+				server.addPrivChatMessage(sender, message);
+			}
 		}
 		
 		// sort a message to the right channel
@@ -130,13 +135,10 @@ public class Listener implements Runnable {
 		else if (line.contains(nick + " @ ") || line.contains(nick + " = ")) {
 			String names = line.substring(line.indexOf(" :") + 2);
 			String[] listOfNames = names.split(" ");
-			for (String name : listOfNames) {
-				String channel = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
-				System.out.println(name + " in channel " + channel);
-				for (int i = 1; i < rooms.size(); i++) {
-					if (channel.equals(rooms.get(i).getName())) {
-						rooms.get(i).addUser(name);
-					}
+			String channel = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
+			for (int i = 1; i < rooms.size(); i++) {
+				if (channel.equals(rooms.get(i).getName())) {
+					rooms.get(i).addAllUsers(listOfNames);
 				}
 			}
 		}
@@ -177,10 +179,7 @@ public class Listener implements Runnable {
 		
 		else if (line.contains(" QUIT ")) {
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
-			if (name.equals(connection.getNick())) {
-				// if the client leaving is you!
-				System.out.println("Getting info about leaving " + connection.getServerName());
-			}
+			
 			for (int i = 1; i < rooms.size(); i++) {
 				DefaultListModel<String> users = rooms.get(i).getUsers();
 				if (users.contains(name)) {

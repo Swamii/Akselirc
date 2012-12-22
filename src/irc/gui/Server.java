@@ -38,7 +38,7 @@ public class Server {
 		jtp.add(room.getName(), room.getPanel());
 	}
 	
-	public void addRoom(String roomName) {
+	public synchronized void addRoom(String roomName) {
 		rooms = connection.getRooms();
 		for (final Room r : rooms) {
 			if (roomName.equals(r.getName())) {
@@ -54,7 +54,7 @@ public class Server {
 		}	
 	}
 	
-	public void addPrivChatMessage(String user, String message) {
+	public void addPrivChatMessage(final String user, final String message) {
 		addPrivChat(user);
 		for (PrivChat chat : privChats) {
 			if (chat.getName().equals(user)) {
@@ -63,31 +63,41 @@ public class Server {
 		}
 	}
 	
-	public void addPrivChat(String user) {
+	public void addPrivChat(final String user) {
 		if (!privChatExists(user)) {
-			PrivChat chat = new PrivChat(user, connection);
+			final PrivChat chat = new PrivChat(user, connection);
 			privChats.add(chat);
-			jtp.add(chat.getName(), chat.getPanel());
-			jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					jtp.add(chat.getName(), chat.getPanel());
+					jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
+				}
+			});
 		}
 	}
 	
-	public void removePrivChat(String user) {
+	public void removePrivChat(int index) {
 		PrivChat rem = null;
 		for (PrivChat chat : privChats) {
-			if (chat.getName().equals(user)) {
+			if (chat.getName().equals(jtp.getTitleAt(index))) {
 				rem = chat;
 			}
 		}
 		if (rem != null) {
 			privChats.remove(rem);
 		}
+		jtp.remove(index);
 	}
 	
-	public ArrayList<PrivChat> getPrivChats() {
-		return privChats;
+	public void removeRoom(String roomName) {
+		for (int i = 0; i < jtp.getTabCount(); i++) {
+			if (roomName.equals(jtp.getTitleAt(i))) {
+				jtp.remove(i);
+			}
+		}
 	}
-	
+
 	// checks if we have a private chat-tab open with the user
 	private boolean privChatExists(String user) {
 		boolean exists = false;
@@ -98,13 +108,9 @@ public class Server {
 		}
 		return exists;
 	}
-	
-	public void removeRoom(String roomName) {
-		for (int i = 0; i < jtp.getTabCount(); i++) {
-			if (roomName.equals(jtp.getTitleAt(i))) {
-				jtp.remove(i);
-			}
-		}
+
+	public ArrayList<PrivChat> getPrivChats() {
+		return privChats;
 	}
 
 	public String getName() {
