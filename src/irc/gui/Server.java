@@ -37,21 +37,19 @@ public class Server {
 	public void addServerTalk(Room room) {
 		jtp.add(room.getName(), room.getPanel());
 	}
-	
+
 	public synchronized void addRoom(String roomName) {
-		rooms = connection.getRooms();
-		for (final Room r : rooms) {
-			if (roomName.equals(r.getName())) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						jtp.add(r.getName(), r.getPanel());
-						jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
-						r.setEditable(true);
-					}
-				});
-			}
-		}	
+		final Room r = connection.getRoom(roomName);
+		if (r != null) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					jtp.add(r.getName(), r.getPanel());
+					jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
+					r.setEditable(true);
+				}
+			});
+		}
 	}
 	
 	public void addPrivChatMessage(final String user, final String message) {

@@ -1,3 +1,4 @@
+
 Saker att göra:
 
 	Preferenser:
@@ -7,11 +8,7 @@ Saker att göra:
 	Ljud:
 		- När någon säger ens namn borde det pinga till m.m.
 	
-	Timestamps (med option att stänga av)
-	
 	Loggar (option att sätta på)
-	
-	Fixa till sortering av users
 	
 	Tab-completion av namn
 	
@@ -19,15 +16,22 @@ Saker att göra:
 		- All of them (eller?) (startat)
 	
 	Arv för popups
+
+Hmmmm:
+	Thread.join()
+	Fixa en bättre stop() för trådarna.
 	
 Klart:
-	Mer än en server samtidigt:
-		- Jobbigt (done) 
+	Mer än en server samtidigt
 
 	Privatchattar med personer
 	
 	Preferenser:
 		- Förinställd connection med nick och rum som ska öppnas
+		
+	Fixa till sortering av users
+	
+	Timestamps (med option att stänga av)
 		
 ---------------------------------------------------------------------------------------------------
 

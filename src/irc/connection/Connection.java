@@ -65,12 +65,9 @@ public class Connection implements Runnable {
 		            @Override
 		            public void run() {
 		                if (!socket.isConnected()) {
-		                	System.out.println("not connected..");
 		        			gui.removeConnection(connection);
 		        			gui.errorPopup("Connection timed out to: " + server);
 		        			return;
-		                } else {
-		                	System.out.println("connected..");
 		                }
 		            }
 		        }, 5000);
@@ -131,7 +128,7 @@ public class Connection implements Runnable {
 		
 	}
 
-	private void init() {
+	private synchronized void init() {
 		// create talker and listener
 		talker = new Talker(this);
 		listener = new Listener(this);
@@ -182,7 +179,7 @@ public class Connection implements Runnable {
 		}
 	}
 	
-	public void addRoom(final String room) {
+	public synchronized void addRoom(final String room) {
 		// if room has password
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -194,7 +191,17 @@ public class Connection implements Runnable {
 		});
 	}
 	
-	public void removeRoom(Room r) {
+	public synchronized Room getRoom(String roomName) {
+		Room room = null;
+		for (Room r : rooms) {
+			if (r.getName().equals(roomName)) {
+				room = r;
+			}
+		}
+		return room;
+	}
+	
+	public synchronized void removeRoom(Room r) {
 		rooms.remove(r);
 	}
 	
@@ -210,10 +217,6 @@ public class Connection implements Runnable {
 	
 	public boolean allGood() {
 		return allGood;
-	}
-	
-	public boolean isFinished() {
-		return finished;
 	}
 	
 	// lots of gets since this is the hub for each connection

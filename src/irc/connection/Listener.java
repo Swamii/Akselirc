@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import javax.swing.DefaultListModel;
 
 /**
@@ -181,8 +183,7 @@ public class Listener implements Runnable {
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			
 			for (int i = 1; i < rooms.size(); i++) {
-				DefaultListModel<String> users = rooms.get(i).getUsers();
-				if (users.contains(name)) {
+				if (rooms.get(i).getUsers().contains(name)) {
 					rooms.get(i).removeUser(name);
 				}
 			}

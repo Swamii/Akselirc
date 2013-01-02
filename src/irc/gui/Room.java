@@ -2,6 +2,7 @@ package irc.gui;
 
 import irc.connection.Connection;
 import irc.connection.Talker;
+import irc.connection.UserSorter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,7 +13,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultListModel;
@@ -47,6 +51,7 @@ public class Room {
 	private Talker talker;
 	private Connection connection;
 	private Server server;
+	private UserSorter userSorter;
 
 	// constructor for the server talk
 	public Room(Connection connection) {
@@ -59,7 +64,7 @@ public class Room {
 	// constructor for normal room
 	public Room(String name, Connection connection) {
 		this.connection = connection;
-		
+		userSorter = new UserSorter();
 		// check if the room has a password
 		if (name.contains(" ")) {
 			this.name = name.split(" ")[0];
@@ -76,12 +81,20 @@ public class Room {
 	}
 
 	public void addText(final String text) {
+		final Calendar cal = Calendar.getInstance();
+		final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				StyleConstants.setForeground(style, Color.BLACK);
 				try {
-					document.insertString(document.getLength(), text + "\n", style);
+					StyleConstants.setForeground(style, Color.BLUE);
+					document.insertString(document.getLength(),
+							"[" + sdf.format(cal.getTime()) + "]",
+							style);
+					StyleConstants.setForeground(style, Color.BLACK);
+					document.insertString(document.getLength(),
+							text + "\n", 
+							style);
 				} catch (BadLocationException e) {
 					e.printStackTrace();
 				}
@@ -118,17 +131,12 @@ public class Room {
 	
 	// used to add a single user who enters the room
 	public void addUser(final String user) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				users.addElement(user);
-				sort(users);
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-				addMessage(user + " has joined " + name);
-			}
-		});
+		users.addElement(user);
+		sort(users);
+		userWindow.setModel(users);
+		outerUserWindow.revalidate();
+		outerUserWindow.repaint();
+		addMessage(user + " has joined " + name);
 	}
 	
 	// used to add all users when first entering a room
@@ -137,40 +145,30 @@ public class Room {
 			users.addElement(user);
 		}
 		sort(users);
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-			}
-		});
+		userWindow.setModel(users);
+		outerUserWindow.revalidate();
+		outerUserWindow.repaint();
 	}
 	
-	// very bad sorting function
+	// better sorting function
 	private void sort(DefaultListModel<String> users) {
 		String[] userArray = new String[users.size()];
 		for (int i = 0; i < users.size(); i++) {
 			userArray[i] = users.get(i);
 		}
 		users.clear();
-		Arrays.sort(userArray);
-		for (int i = 0; i < userArray.length; i++) {
-			users.addElement(userArray[i]);
+		Arrays.sort(userArray, userSorter);
+		for (String s : userArray) {
+			users.addElement(s);
 		}
 	}
-	
+
 	public void removeUser(final String user) {
 		users.removeElement(user);
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-				addMessage(user + " has left " + name);
-			}
-		});
+		userWindow.setModel(users);
+		outerUserWindow.revalidate();
+		outerUserWindow.repaint();
+		addMessage(user + " has left " + name);
 	}
 	
 	protected void initGUI() {
