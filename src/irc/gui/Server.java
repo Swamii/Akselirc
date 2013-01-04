@@ -4,6 +4,7 @@ import irc.connection.Connection;
 import irc.connection.Talker;
 
 import java.awt.GridLayout;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -16,14 +17,14 @@ public class Server {
 	private JPanel panel;
 	private JTabbedPane jtp;
 	private Talker talker;
-	private ArrayList<Room> rooms;
 	private ArrayList<PrivChat> privChats;
+	private ArrayList<Room> rooms;
 
 	public Server(Connection connection) {
 		this.connection = connection;
 		name = connection.getServerName();
-		talker = connection.getTalker();
 		privChats = new ArrayList<PrivChat>();
+		rooms = new ArrayList<Room>();
 		
 		initGUI();
 	}	
@@ -32,23 +33,31 @@ public class Server {
 		panel = new JPanel(new GridLayout(1, 1));
 		jtp = new JTabbedPane();
 		panel.add(jtp);
+		addServerTalk();
 	}
 	
-	public void addServerTalk(Room room) {
-		jtp.add(room.getName(), room.getPanel());
+	public void addServerTalk() {
+		Room r = new Room(connection);
+		rooms.add(r);
+		jtp.add(r.getName(), r.getPanel());
+		r.setEditable(true);
 	}
 
-	public synchronized void addRoom(String roomName) {
-		final Room r = connection.getRoom(roomName);
-		if (r != null) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
+	public synchronized void addRoom(final String roomName) {
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
+					Room r = new Room(roomName, connection);
+					rooms.add(r);
 					jtp.add(r.getName(), r.getPanel());
 					jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, connection.getTalker()));
 					r.setEditable(true);
 				}
 			});
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -88,12 +97,28 @@ public class Server {
 		jtp.remove(index);
 	}
 	
-	public void removeRoom(String roomName) {
+	public synchronized void removeRoom(String roomName) {
+		Room r = getRoom(roomName);
+		rooms.remove(r);
+				
 		for (int i = 0; i < jtp.getTabCount(); i++) {
 			if (roomName.equals(jtp.getTitleAt(i))) {
 				jtp.remove(i);
 			}
 		}
+	}
+	
+	public void removeUser(String user, String roomName) {
+		Room r = getRoom(roomName);
+		if (r != null) r.removeUser(user);
+	}
+	
+	public synchronized Room getRoom(String name) {
+		Room room = null;
+		for (Room r :  rooms) {
+			if (r.getName().equals(name)) room = r;
+		}
+		return room;
 	}
 
 	// checks if we have a private chat-tab open with the user
@@ -106,6 +131,10 @@ public class Server {
 		}
 		return exists;
 	}
+	
+	public ArrayList<Room> getRooms() {
+		return rooms;
+	}
 
 	public ArrayList<PrivChat> getPrivChats() {
 		return privChats;
@@ -116,7 +145,7 @@ public class Server {
 	}
 	
 	public Talker getTalker() {
-		return talker;
+		return connection.getTalker();
 	}
 
 	public JPanel getPanel() {

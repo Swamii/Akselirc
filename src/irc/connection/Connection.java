@@ -25,26 +25,23 @@ import javax.swing.SwingUtilities;
 
 public class Connection implements Runnable {
 	
-	private String server;
+	private String serverName;
 	private String nick;
 	private Socket socket;
 	private BufferedWriter writer;
 	private BufferedReader reader;
 	private GUI gui;
-	private ArrayList<Room> rooms = new ArrayList<Room>();
-	private Server s;
+	private Server server;
 	private Talker talker;
 	private Listener listener;
-	private Thread thread;
-	private boolean finished = false;
 	private boolean allGood = false;
 	private String startupRooms;
 	private Connection connection;
 	private Room serverTalk;
 
-	public Connection(String nick, String server, String rooms) {
+	public Connection(String nick, String serverName, String rooms) {
 		this.nick = nick;
-		this.server = server;
+		this.serverName = serverName;
 		startupRooms = rooms;
 		gui = GUI.gui;
 	}
@@ -55,7 +52,7 @@ public class Connection implements Runnable {
 		// add this connection to the array, so the gui can keep track of it
 		gui.addConnection(this);
 		socket = new Socket();
-		SocketAddress socketAddress = new InetSocketAddress(server, 6667);
+		SocketAddress socketAddress = new InetSocketAddress(serverName, 6667);
 		
 		connection = this;
 		
@@ -66,7 +63,7 @@ public class Connection implements Runnable {
 		            public void run() {
 		                if (!socket.isConnected()) {
 		        			gui.removeConnection(connection);
-		        			gui.errorPopup("Connection timed out to: " + server);
+		        			gui.errorPopup("Connection timed out to: " + serverName);
 		        			return;
 		                }
 		            }
@@ -81,6 +78,11 @@ public class Connection implements Runnable {
 		}
 		
 		if (!socket.isConnected()) {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			return;
 		}
 		
@@ -95,6 +97,7 @@ public class Connection implements Runnable {
 		
 		init();
 		
+		serverTalk = server.getRooms().get(0);
 		String line;
 		try {
 			// read lines from server and respond accordingly
@@ -110,12 +113,12 @@ public class Connection implements Runnable {
 					}
 				}
 				if (line.indexOf("004") >= 0) {
-					System.out.println("Connected to " + server);
+					System.out.println("Connected to " + serverName);
 					// all good. let the listener take over.
 					startListener();
 					break;
 				} else if (line.indexOf("433") >= 0) {
-					gui.errorPopup("Nickname is already in use on: " + server);
+					gui.errorPopup("Nickname is already in use on: " + serverName);
 					gui.removeConnection(this);
 					break;
 				}
@@ -129,17 +132,13 @@ public class Connection implements Runnable {
 	}
 
 	private synchronized void init() {
-		// create talker and listener
-		talker = new Talker(this);
-		listener = new Listener(this);
 		
-		// create the server talk room which displays server messages.
+		// create the server part of the gui
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override
 				public void run() {
-					serverTalk = new Room(connection);
-					s = new Server(connection);
+					server = new Server(connection);
 				}
 			});
 		} catch (InvocationTargetException e) {
@@ -147,23 +146,23 @@ public class Connection implements Runnable {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		rooms.add(serverTalk);
 
-		// add the server talk "room" to the server (the inner jtabbedpane)
-		s.addServerTalk(serverTalk);
+		// create talker and listener
+		talker = new Talker(this);
+		listener = new Listener(this, socket);
 
-		gui.addServer(s);
+		gui.addServer(server);
 
 	}
 	
 	// start listener, join any rooms added to preferences.
 	private void startListener() {
 		
-		thread = new Thread(listener);
-		thread.start();
 		gui.enableJoinRoomMenuItem(true);
 		checkPreConfRooms();
 		allGood = true;
+		
+		listener.start();
 
 	}
 	
@@ -171,57 +170,20 @@ public class Connection implements Runnable {
 		if (!startupRooms.equals("")) {
 			if (startupRooms.contains(",")) {
 				for (String s : startupRooms.split(",")) {
-					addRoom(s);
+					talker.joinRoom(s);
 				}
 			} else {
-				addRoom(startupRooms);
+				talker.joinRoom(startupRooms);
 			}
 		}
-	}
-	
-	public synchronized void addRoom(final String room) {
-		// if room has password
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				Room r = new Room(room, connection);
-				rooms.add(r);
-				talker.joinRoom(room);
-			}
-		});
-	}
-	
-	public synchronized Room getRoom(String roomName) {
-		Room room = null;
-		for (Room r : rooms) {
-			if (r.getName().equals(roomName)) {
-				room = r;
-			}
-		}
-		return room;
-	}
-	
-	public synchronized void removeRoom(Room r) {
-		rooms.remove(r);
 	}
 	
 	public void closeCrap() {
-		try {
-			listener.stop();
-			socket.close();
-		} catch (IOException e) {
-			gui.errorPopup("Something went wrong closing the crap");
-			System.out.println("Shit went wrong closing " + server);
-		}
+		listener.stop();
 	}
 	
 	public boolean allGood() {
 		return allGood;
-	}
-	
-	// lots of gets since this is the hub for each connection
-	public ArrayList<Room> getRooms() {
-		return rooms;
 	}
 	
 	public String getNick() {
@@ -229,11 +191,11 @@ public class Connection implements Runnable {
 	}
 	
 	public Server getServer() {
-		return s;
+		return server;
 	}
 	
 	public String getServerName() {
-		return server;
+		return serverName;
 	}
 	
 	public Listener getListener() {

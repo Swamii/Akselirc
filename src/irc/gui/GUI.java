@@ -29,30 +29,27 @@ public class GUI extends JFrame {
 	public static GUI gui;
 	private final static int WIDTH = 800;
 	private final static int HEIGHT = 600;
-	private volatile ArrayList<Connection> connections = new ArrayList<Connection>();
+	private ArrayList<Connection> connections = new ArrayList<Connection>();
 	private JFrame frame;
 	private JTabbedPane jtp;
 	private JMenuBar menubar;
 	private JMenuItem joinRoom;
 	private JMenu file;
 	private JMenu edit;
-	
-	
+
+
 	// function for exiting one connection
-	public void removeConnection(Connection connection) {
-		
-		// check that the crap has been opened before closing it
-		if (connection.allGood()) {
-			connection.closeCrap();
+	public synchronized void removeConnection(Connection connection) {
+
+		if (connection.getListener() != null) {
+			connection.getListener().stop();
 		}
 		
-		// if the tab hasn't been removed already (by the ButtonTabComponent), remove it now
 		for (int i = 0; i < jtp.getTabCount(); i++) {
 			if (jtp.getTitleAt(i).equals(connection.getServerName())) {
 				jtp.remove(i);
 			}
 		}
-		
 		connections.remove(connection);
 		
 		System.out.println("# of connections " + connections.size());
@@ -109,14 +106,15 @@ public class GUI extends JFrame {
 				@Override
 				public void run() {
 					Connection connection = new Connection(list[1], list[0], list[2]);
-					Thread t = new Thread(connection);
+					Thread t = new Thread(connection, connection.getServerName());
 					t.start();
+					
 				}
 			});
 		}
 	}
 	
-	public void addConnection(Connection connection) {
+	public synchronized void addConnection(Connection connection) {
 		connections.add(connection);
 	}
 	
@@ -124,7 +122,7 @@ public class GUI extends JFrame {
 	public void newConnection(String[] details) {
 		assert (details.length == 2); // i just wanted to use assert
 		Connection connection = new Connection(details[0], details[1], "");
-		Thread t = new Thread(connection);
+		Thread t = new Thread(connection, connection.getServerName());
 		t.start();
 	}
 	
@@ -162,7 +160,7 @@ public class GUI extends JFrame {
 								"Please enter it below.", "Enter password", 
 								JOptionPane.PLAIN_MESSAGE, null, null, null);
 				if (pwd != null && pwd.length() > 0) {
-					connection.addRoom(room + " " + pwd);
+					connection.getServer().addRoom(room + " " + pwd);
 				}
 			}
 		});
@@ -267,14 +265,9 @@ public class GUI extends JFrame {
 	private void quit() {
 		setVisible(false);
 		for (int i = 0; i < connections.size(); i++) {
-			connections.get(i).getTalker().leaveServer();
 			if (connections.get(i).allGood()) {
-				connections.get(i).closeCrap();
-			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				connections.get(i).getTalker().leaveServer();
+				connections.get(i).getListener().stop();
 			}
 		}
 		System.exit(0);

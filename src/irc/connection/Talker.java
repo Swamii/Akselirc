@@ -1,6 +1,7 @@
 package irc.connection;
 
 import irc.gui.GUI;
+import irc.gui.Server;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -9,10 +10,12 @@ public class Talker {
 	
 	private Connection connection;
 	private BufferedWriter writer;
+	private Server server;
 	private GUI gui;
 
 	public Talker(Connection connection) {
 		this.connection = connection;
+		server = connection.getServer();
 		writer = connection.getWriter();
 		gui = GUI.gui;
 	}
@@ -31,7 +34,7 @@ public class Talker {
 		if (command.equals("JOIN")) {
 			String room = message.substring(message.indexOf(" ") + 1);
 			if (!room.startsWith("#")) room = "#" + room;
-			connection.addRoom(room);
+			joinRoom(room);
 		}
 
 		if (command.equals("PART")) {

@@ -2,6 +2,13 @@ package irc.connection;
 
 import java.util.Comparator;
 
+/**
+ * Comparator for user names used in irc clients.
+ * It puts all names in the order '@' > '+' > anything else.
+ * @author Akseli Nelander
+ *
+ */
+
 public class UserSorter implements Comparator<String> {
 
 	@Override

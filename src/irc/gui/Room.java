@@ -19,6 +19,7 @@ import java.util.Calendar;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -52,6 +53,7 @@ public class Room {
 	private Connection connection;
 	private Server server;
 	private UserSorter userSorter;
+	private ButtonListener buttonListener;
 
 	// constructor for the server talk
 	public Room(Connection connection) {
@@ -65,6 +67,7 @@ public class Room {
 	public Room(String name, Connection connection) {
 		this.connection = connection;
 		userSorter = new UserSorter();
+		
 		// check if the room has a password
 		if (name.contains(" ")) {
 			this.name = name.split(" ")[0];
@@ -73,6 +76,7 @@ public class Room {
 		}
 		talker = connection.getTalker();
 		server = connection.getServer();
+		
 		initGUI();
 	}
 	
@@ -89,7 +93,7 @@ public class Room {
 				try {
 					StyleConstants.setForeground(style, Color.BLUE);
 					document.insertString(document.getLength(),
-							"[" + sdf.format(cal.getTime()) + "]",
+							"[" + sdf.format(cal.getTime()) + "] ",
 							style);
 					StyleConstants.setForeground(style, Color.BLACK);
 					document.insertString(document.getLength(),
@@ -131,27 +135,35 @@ public class Room {
 	
 	// used to add a single user who enters the room
 	public void addUser(final String user) {
-		users.addElement(user);
-		sort(users);
-		userWindow.setModel(users);
-		outerUserWindow.revalidate();
-		outerUserWindow.repaint();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				users.addElement(user);
+				sort();
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
 		addMessage(user + " has joined " + name);
 	}
 	
 	// used to add all users when first entering a room
 	public void addAllUsers(final String[] listOfUsers) {
-		for (String user : listOfUsers) {
-			users.addElement(user);
-		}
-		sort(users);
-		userWindow.setModel(users);
-		outerUserWindow.revalidate();
-		outerUserWindow.repaint();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				for (String user : listOfUsers) {
+					users.addElement(user);
+				}
+				sort();
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
 	}
 	
 	// better sorting function
-	private void sort(DefaultListModel<String> users) {
+	private void sort() {
 		String[] userArray = new String[users.size()];
 		for (int i = 0; i < users.size(); i++) {
 			userArray[i] = users.get(i);
@@ -166,28 +178,20 @@ public class Room {
 	public void removeUser(final String user) {
 		users.removeElement(user);
 		userWindow.setModel(users);
-		outerUserWindow.revalidate();
-		outerUserWindow.repaint();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
 		addMessage(user + " has left " + name);
 	}
 	
 	protected void initGUI() {
-		ButtonListener buttonListener = new ButtonListener();
+		buttonListener = new ButtonListener();
 		chatPanel = new JPanel(new BorderLayout());
 		
-		userText = new JTextField();
-		userText.setEditable(false);
-		userText.requestFocusInWindow();
-		userText.addKeyListener(buttonListener);
-		userText.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				talker.handleMessage(event.getActionCommand(), getName());
-				if (!event.getActionCommand().startsWith("/")) {
-					addText(connection.getNick() + ": " + event.getActionCommand());
-				}
-				userText.setText("");
-			}
-		});
+		userText = createUserText(); 
 		
 		context = new StyleContext();
 		document = new DefaultStyledDocument(context);
@@ -248,6 +252,25 @@ public class Room {
 		mainPanel.setSize(800, 600);
 	}
 	
+	private JTextField createUserText() {
+		userText = new JTextField();
+		userText.setEditable(false);
+		userText.requestFocusInWindow();
+		userText.addKeyListener(buttonListener);
+		userText.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				talker.handleMessage(event.getActionCommand(), getName());
+				if (!event.getActionCommand().startsWith("/")) {
+					addText(connection.getNick() + ": " + event.getActionCommand());
+				}
+				userText.setText("");
+			}
+		});
+		userText.setFocusTraversalKeysEnabled(false);
+		
+		return userText;
+	}
+	
 	private String fixName(String name) {
 		if (name.startsWith("@") || name.startsWith("+")) {
 			name = name.substring(1);
@@ -306,8 +329,12 @@ public class Room {
 
 		@Override
 		public void keyPressed(KeyEvent e) {
-			if (e.getKeyCode() == KeyEvent.VK_TAB) {
+			if (e.getKeyCode() == KeyEvent.VK_TAB && userText.getText().length() > 0) {
 				System.out.println("TAB!");
+				String[] words = userText.getText().split(" ");
+				userText.getText();
+				String lastWord = words[words.length - 1];
+				
 			}
 		}
 

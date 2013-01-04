@@ -16,6 +16,10 @@ Saker att göra:
 		- All of them (eller?) (startat)
 	
 	Arv för popups
+	
+	Stöd för ctrl/cmd+c-v
+	
+	Göra länkar klickbara
 
 Hmmmm:
 	Thread.join()

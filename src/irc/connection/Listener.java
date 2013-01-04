@@ -6,18 +6,15 @@ import irc.gui.Server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import javax.swing.DefaultListModel;
 
 /**
  * 
- * @author Akseli Nelander
  * This class is responsible for listening to the server and making sure the right
  * stuff gets done.
- *
+ * @author Akseli Nelander
  */
 
 public class Listener implements Runnable {
@@ -27,21 +24,35 @@ public class Listener implements Runnable {
 	private Connection connection;
 	private ArrayList<Room> rooms;
 	private Server server;
-	private boolean running;
+	private volatile boolean running;
+	private Thread thread;
+	private Socket socket;
 	
-	public Listener(Connection connection) {
+	public Listener(Connection connection, Socket socket) {
 		this.connection = connection;
+		this.socket = socket;
+		server = connection.getServer();
 		reader = connection.getReader();
 		talker = connection.getTalker();
-		rooms = connection.getRooms();
+		rooms = server.getRooms();
 		running = true;
+	}
+	
+	public synchronized void start() {
+		thread = new Thread(this, connection.getServerName() + " - Listener");
+		thread.start();
+	}
+	
+	public synchronized void stop() {
+		running = false;
+		System.out.println("Stop called! Running = " + running + " - " + connection.getServerName());
 	}
 
 	@Override
 	public void run() {
 		String line = null;
-		// make sure
-		connection.getRooms().get(0).setEditable(true);
+		// make sure the serverTalk tab is editable
+		rooms.get(0).setEditable(true);
 		
 		try {
 			while (running) {
@@ -58,37 +69,33 @@ public class Listener implements Runnable {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-	}
-	
-	public void stop() {
-		running = false;
 	}
 	
 	// checking the line the server sends
 	private void checkShitOutAndDoShitWithIt(String line) {
 		
-		rooms = connection.getRooms();
 		String nick = connection.getNick();
 		Room serverTalk = rooms.get(0);
 		serverTalk.addText(line);
-		server = connection.getServer();
 		System.out.println(line);
 		
 		
 		// tried to join a room with a password, without supplying one.
 		if (line.contains(nick) && line.contains("Cannot join channel (+k)")) {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
-			Room remRoom = null;
-			for (int i = 1; i < rooms.size(); i++) {
-				if (rooms.get(i).getName().equals(room)) {
-					remRoom = rooms.get(i);
-				}
-			}
-			if (remRoom != null) {
-				connection.removeRoom(remRoom);
-				GUI.gui.pwdPopup(room, connection);
-			}
+			GUI.gui.pwdPopup(room, connection);
 		}
 		
 		// ping pong so we don't disconnect
@@ -100,8 +107,11 @@ public class Listener implements Runnable {
 		if (line.contains(" PRIVMSG " + nick)) {
 			String sender = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			String message = line.substring(line.indexOf(":", 5) + 1);
+			// CTCP stuff
 			if (line.contains("VERSION")) {
 				talker.sendVersion(sender);
+			} else if (line.contains("TIME")) {
+				
 			} else {
 				server.addPrivChatMessage(sender, message);
 			}
@@ -110,27 +120,16 @@ public class Listener implements Runnable {
 		// sort a message to the right channel
 		if (line.contains("PRIVMSG #")) {
 			String channel = line.substring(line.indexOf("#"), line.indexOf(" :"));
-			for (int i = 1; i < rooms.size(); i++) {
-				if (channel.equals(rooms.get(i).getName())) {
-					if (line.contains("!") && line.contains(" :")) {
-						String user = line.substring(1, line.indexOf("!"));
-						String text = line.substring(line.indexOf(":", 2) + 1);
-						rooms.get(i).addText(user + ": " + text);
-					}
-				}
-			}
+			String user = line.substring(1, line.indexOf("!"));
+			String message = line.substring(line.indexOf(":", 2) + 1);
+			server.getRoom(channel).addText(user + ": " + message);
 		}
 		
 		// if the client joins a channel, add the channel and stuff
 		else if (line.contains(" JOIN ") && line.contains(nick)) {
 			String channel = line.substring(line.indexOf("#"));
 			serverTalk.addText("You are now in " + channel);
-			for (int i = 1; i < rooms.size(); i++) {
-				System.out.println(channel + " - " + rooms.get(i).getName());
-				if (channel.equals(rooms.get(i).getName())) {
-					server.addRoom(rooms.get(i).getName());
-				}
-			}
+			server.addRoom(channel);
 		}
 		
 		// checking and adding all users when entering a channel
@@ -138,47 +137,34 @@ public class Listener implements Runnable {
 			String names = line.substring(line.indexOf(" :") + 2);
 			String[] listOfNames = names.split(" ");
 			String channel = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
-			for (int i = 1; i < rooms.size(); i++) {
-				if (channel.equals(rooms.get(i).getName())) {
-					rooms.get(i).addAllUsers(listOfNames);
-				}
-			}
+			Room r = server.getRoom(channel);
+			r.addAllUsers(listOfNames);
 		}
 		
 		// if a user joins a channel
-		if (line.contains(" JOIN ")) {
+		else if (line.contains(" JOIN ")) {
 			String channel = line.substring(line.indexOf("#"));
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
-			if (!name.equals(connection.getNick())) {
-				System.out.println(channel + "-!JOIN!-" + name);
-				for (int i = 1; i < rooms.size(); i++) {
-					if (channel.equals(rooms.get(i).getName())) {
-						rooms.get(i).addUser(name);
-					}
-				}
-			}
+			Room r = server.getRoom(channel);
+			r.addUser(name);
 		}
 		
 		// if a user leaves a channel
 		else if (line.contains(" PART ")) {
 			String channel = line.substring(line.indexOf("#"));
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
-			for (int i = 1; i < rooms.size(); i++) {
-				// check if that user is the client and that we are in the right room in the loop
-				Room r = null;
-				if (channel.equals(rooms.get(i).getName()) && name.equals(connection.getNick())) {
-					r = rooms.get(i);
-					connection.removeRoom(r);
-					break;
-				}
-				// check all other users leaving
-				else if (channel.equals(rooms.get(i).getName())) {
-					rooms.get(i).removeUser(name);
-					break;
-				}
+			
+			// check if that user is the client
+			if (name.equals(connection.getNick())) {
+				server.removeRoom(channel);
+			}
+			// check all other users leaving
+			else {
+				server.removeUser(name, channel);
 			}
 		}
 		
+		// if someone quits the server
 		else if (line.contains(" QUIT ")) {
 			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
 			
@@ -189,21 +175,18 @@ public class Listener implements Runnable {
 			}
 		}
 		
+		// if someone invites you to a room
 		else if (line.contains(" INVITE ") && line.contains(nick)) {
 			String[] invLine = line.split(" ");
 			String channel = invLine[3].substring(1);
 			talker.joinRoom(channel);
 		}
 		
+		// when you join the room and the room sends you their topic
 		else if (line.contains(" 332 ")) {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
 			String topic = line.substring(line.indexOf(":", line.indexOf(room)) + 1);
-			System.out.println(topic);
-			for (int i = 1; i < rooms.size(); i++) {
-				if (rooms.get(i).getName().equals(room))
-					rooms.get(i).addMOTD(topic);
-			}
-			
+			server.getRoom(room).addMOTD(topic);
 		}
 		
 	}
