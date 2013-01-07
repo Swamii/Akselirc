@@ -57,9 +57,8 @@ public class Room {
 
 	// constructor for the server talk
 	public Room(Connection connection) {
-		name = "Server talk";
+		this.name = "Server talk";
 		this.connection = connection;
-		talker = connection.getTalker();
 		initServerTalk();
 	}
 	
@@ -259,7 +258,7 @@ public class Room {
 		userText.addKeyListener(buttonListener);
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				talker.handleMessage(event.getActionCommand(), getName());
+				talker.handleMessage(event.getActionCommand(), name);
 				if (!event.getActionCommand().startsWith("/")) {
 					addText(connection.getNick() + ": " + event.getActionCommand());
 				}
@@ -295,8 +294,9 @@ public class Room {
 		userText.setEditable(false);
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				if (event.getActionCommand().startsWith("/")) {
-					talker.handleMessage(event.getActionCommand(), getName());
+				String text = event.getActionCommand();
+				if (text.startsWith("/")) {
+					connection.getTalker().handleMessage(text, name);
 				}
 				userText.setText("");
 			}
@@ -320,28 +320,31 @@ public class Room {
 	}
 	
 	private class ButtonListener implements KeyListener {
-
-		@Override
+		
 		public void keyTyped(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
 		}
 
-		@Override
 		public void keyPressed(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_TAB && userText.getText().length() > 0) {
 				System.out.println("TAB!");
-				String[] words = userText.getText().split(" ");
-				userText.getText();
-				String lastWord = words[words.length - 1];
-				
+				String words = userText.getText();
+				String lastWord = "";
+				String allButLastWord = "";
+				if (words.contains(" ")) {
+					lastWord = words.substring(words.lastIndexOf(" ") + 1);
+					allButLastWord = words.substring(0, words.length() - lastWord.length());
+				} else {
+					lastWord = words;
+				}
+				for (int i = 0; i < users.size(); i++) {
+					if (users.get(i).toLowerCase().startsWith(lastWord.toLowerCase())) {
+						userText.setText(allButLastWord + users.get(i));
+					}
+				}
 			}
 		}
-
-		@Override
+		
 		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
 		}
 	}
 	

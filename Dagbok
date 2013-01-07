@@ -42,3 +42,10 @@ och skapar en popup med lösenord. Om man skriver in lösenord så försöker de
 Problemet att swing inte vill rita upp fler saker samtidigt återkommer. Har fått lägga till invokeLater() på flera ställen i koden.
 Har arbetat med att kunna visa upp MOTD (Message of the Day) som alla större irc-kanaler har. Har även jobbat med talkern så att man
 kan skriva något mer kommando och så att dom redan existerande fungerar bättre.
+
+7 Jan:
+Mycket har lagts till sedan sist. Har ersatt tidigare sagd synchronized-grej med invokeLater(). Har fixat sortering av användare i kanalerna.
+Lagt till timestamps i rummen, så man ser när folk skrev något. Det finns privatchattar. Tab-completion är skapat för namn så att man kan
+skriva 'pe'-tab och få fram 'pelle' om han är först i listan. En enkel implementation där man inte kan tabba genom alla namn utan bara får
+det första i listan. Gjort en större omstrukturering i koden. All information om rum har flyttats från Connection till Server-klassen.
+Allmänna buggfixar.

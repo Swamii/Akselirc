@@ -10,8 +10,6 @@ Saker att göra:
 	
 	Loggar (option att sätta på)
 	
-	Tab-completion av namn
-	
 	Stöd för slashkommandon:
 		- All of them (eller?) (startat)
 	
@@ -20,6 +18,8 @@ Saker att göra:
 	Stöd för ctrl/cmd+c-v
 	
 	Göra länkar klickbara
+	
+	AUTH
 
 Hmmmm:
 	Thread.join()
@@ -36,6 +36,8 @@ Klart:
 	Fixa till sortering av users
 	
 	Timestamps (med option att stänga av)
+	
+	Tab-completion av namn (enkel version)
 		
 ---------------------------------------------------------------------------------------------------
 
