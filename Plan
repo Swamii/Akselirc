@@ -13,9 +13,7 @@ Saker att göra:
 	Stöd för slashkommandon:
 		- All of them (eller?) (startat)
 	
-	Arv för popups
-	
-	Stöd för ctrl/cmd+c-v
+	Arv för popups	
 	
 	Göra länkar klickbara
 	
@@ -24,8 +22,16 @@ Saker att göra:
 Hmmmm:
 	Thread.join()
 	Fixa en bättre stop() för trådarna.
+	Hmm, user-listorna i room. 
+	Observer + Observable...
 	
 Klart:
+
+	Stöd för ctrl/cmd+c-v
+
+	Listener-saker:
+	 	+v, +o
+	 
 	Mer än en server samtidigt
 
 	Privatchattar med personer

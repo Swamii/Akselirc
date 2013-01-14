@@ -45,15 +45,15 @@ public class RoomPopup extends JDialog {
 		mouseListener = new RoomButtonListener();
 		initGUI();
 	}
-	
+
 	// 'constructor', makes sure there is only one instance of the dialog
-		public static RoomPopup getInstance() {
-			if (RoomPopupInstance == null) {
-				RoomPopupInstance = new RoomPopup();
-			}
-			return RoomPopupInstance;
+	public static RoomPopup getInstance() {
+		if (RoomPopupInstance == null) {
+			RoomPopupInstance = new RoomPopup();
 		}
-	
+		return RoomPopupInstance;
+	}
+
 	private void initGUI() {
 		ArrayList<Connection> connections = gui.getConnections();
 		

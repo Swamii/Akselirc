@@ -11,7 +11,6 @@ public class Akselirc {
 		GUI gui = new GUI();
 		gui.initGUI();
 		gui.initStartupConnections();
-		
 	}
 	
 }

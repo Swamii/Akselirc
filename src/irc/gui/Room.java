@@ -1,5 +1,6 @@
 package irc.gui;
 
+import irc.connection.CleanUserSorter;
 import irc.connection.Connection;
 import irc.connection.Talker;
 import irc.connection.UserSorter;
@@ -14,12 +15,12 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ActionMap;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -35,6 +36,15 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+/**
+ * The Room class. It handles everything concerning rooms.
+ * A problem which will probably come into play went entering
+ * multiple channels with many users is the too much computing is
+ * handled on the Swing EventQueue
+ * @author Akseli
+ *
+ */
+
 public class Room {
 	
 	private JPanel mainPanel;
@@ -47,12 +57,14 @@ public class Room {
 	private Style style;
 	private JList<String> userWindow;
 	private DefaultListModel<String> users;
+	private ArrayList<String> usersClean;
 	private JScrollPane outerUserWindow;
 	private String name;
 	private Talker talker;
 	private Connection connection;
 	private Server server;
 	private UserSorter userSorter;
+	private CleanUserSorter cleanSorter;
 	private ButtonListener buttonListener;
 
 	// constructor for the server talk
@@ -66,6 +78,7 @@ public class Room {
 	public Room(String name, Connection connection) {
 		this.connection = connection;
 		userSorter = new UserSorter();
+		cleanSorter = new CleanUserSorter();
 		
 		// check if the room has a password
 		if (name.contains(" ")) {
@@ -75,6 +88,8 @@ public class Room {
 		}
 		talker = connection.getTalker();
 		server = connection.getServer();
+		
+		usersClean = new ArrayList<String>();
 		
 		initGUI();
 	}
@@ -161,36 +176,95 @@ public class Room {
 		});
 	}
 	
+	public void removeUser(final String user, String reason) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				users.removeElement(user);
+				sort();
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
+		addMessage(user + reason);
+	}
+
+	// when the users MODE gets changed (i.e user given op status or voice)
+	public void updateName(String operator, final String name, final String change) {
+		
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				users.removeElement(name);
+				switch (change) {
+				case "+o":
+					users.addElement("@" + name);
+					break;
+				case "+v":
+					users.addElement("+" + name);
+					break;
+				case "-v":
+				case "-o":
+					users.addElement(fixName(name));
+					break;
+				}
+				sort();
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
+		addMessage(operator + " changed " + name + " (" + change + ")"); 
+	}
+	
+	public void changeName(final String name, final String newName) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				users.removeElement(name);
+				users.addElement(newName);
+				sort();
+				userWindow.setModel(users);
+				outerUserWindow.revalidate();
+				outerUserWindow.repaint();
+			}
+		});
+		addMessage(name + " changed his name to " + newName);
+	}
+
 	// better sorting function
 	private void sort() {
 		String[] userArray = new String[users.size()];
+		String[] cleanArray = new String[users.size()];
 		for (int i = 0; i < users.size(); i++) {
 			userArray[i] = users.get(i);
+			cleanArray[i] = fixName(users.get(i));
 		}
 		users.clear();
+		Arrays.sort(cleanArray, cleanSorter);
+		usersClean.clear();
+		for (String s : cleanArray) {
+			usersClean.add(s);
+		}
 		Arrays.sort(userArray, userSorter);
 		for (String s : userArray) {
 			users.addElement(s);
 		}
 	}
-
-	public void removeUser(final String user) {
-		users.removeElement(user);
-		userWindow.setModel(users);
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-			}
-		});
-		addMessage(user + " has left " + name);
+	
+	private String getNext(String lastWord, String switchWord) {
+		int nextIndex = usersClean.indexOf(lastWord) + 1;
+		String nextWord = lastWord;
+		if (nextIndex < usersClean.size() && 
+				usersClean.get(nextIndex).toLowerCase().startsWith(switchWord.toLowerCase())) {
+			nextWord = usersClean.get(nextIndex);
+		}
+		return nextWord;
 	}
 	
 	protected void initGUI() {
 		buttonListener = new ButtonListener();
 		chatPanel = new JPanel(new BorderLayout());
 		
-		userText = createUserText(); 
+		createUserText();
 		
 		context = new StyleContext();
 		document = new DefaultStyledDocument(context);
@@ -251,7 +325,7 @@ public class Room {
 		mainPanel.setSize(800, 600);
 	}
 	
-	private JTextField createUserText() {
+	private void createUserText() {
 		userText = new JTextField();
 		userText.setEditable(false);
 		userText.requestFocusInWindow();
@@ -267,7 +341,6 @@ public class Room {
 		});
 		userText.setFocusTraversalKeysEnabled(false);
 		
-		return userText;
 	}
 	
 	private String fixName(String name) {
@@ -307,6 +380,7 @@ public class Room {
 		mainPanel.setSize(800, 600);
 	}
 	
+	
 	public JPanel getPanel() {
 		return mainPanel;
 	}
@@ -319,26 +393,53 @@ public class Room {
 		return users;
 	}
 	
+	/**
+	 * This class handles the tab-completion feature
+	 * when you quickly want to type a name you can 
+	 * type the first letter and then tab through all
+	 * the names starting with that letter. Multiple letters
+	 * works as well
+	 * @author Akseli
+	 *
+	 */
 	private class ButtonListener implements KeyListener {
+		
+		private String switchWord;
 		
 		public void keyTyped(KeyEvent e) {
 		}
 
 		public void keyPressed(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_TAB && userText.getText().length() > 0) {
-				System.out.println("TAB!");
 				String words = userText.getText();
 				String lastWord = "";
 				String allButLastWord = "";
+
 				if (words.contains(" ")) {
 					lastWord = words.substring(words.lastIndexOf(" ") + 1);
 					allButLastWord = words.substring(0, words.length() - lastWord.length());
 				} else {
 					lastWord = words;
 				}
-				for (int i = 0; i < users.size(); i++) {
-					if (users.get(i).toLowerCase().startsWith(lastWord.toLowerCase())) {
-						userText.setText(allButLastWord + users.get(i));
+				
+				// if you want to tab to the next name
+				if (usersClean.contains(lastWord)) {
+					if (switchWord == null) {
+						switchWord = lastWord;
+					}
+					System.out.println(switchWord + ", " + lastWord);
+					userText.setText(allButLastWord + getNext(lastWord, switchWord));
+				} 
+				// if you have a incomplete name typed
+				else {
+
+					switchWord = lastWord;
+					
+					for (int i = 0; i < usersClean.size(); i++) {
+						if (usersClean.get(i).toLowerCase().startsWith(lastWord.toLowerCase())) {
+							userText.setText(allButLastWord + usersClean.get(i));
+							break;
+						}
 					}
 				}
 			}

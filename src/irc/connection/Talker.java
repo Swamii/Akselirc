@@ -20,7 +20,7 @@ public class Talker {
 		gui = GUI.gui;
 	}
 
-	// check the command the user has typed. i shouldn't have to check this since the irc protocol is so simple.
+	// check the command the user has typed.
 	private void parseCommand(String message, String senderRoom) {
 
 		if (message.toUpperCase().equals("PART")) leaveRoom(senderRoom);
@@ -37,7 +37,7 @@ public class Talker {
 			joinRoom(room);
 		}
 
-		if (command.equals("PART")) {
+		else if (command.equals("PART")) {
 			String room = item;
 			if (room.contains(",")) {
 				String[] rooms = room.split(",");
@@ -49,6 +49,10 @@ public class Talker {
 				if (!room.startsWith("#")) room = "#" + room;
 				leaveRoom(room);
 			}
+		}
+		
+		else if (command.equals("NICK")) {
+			changeNick(item);
 		}
 
 	}
@@ -89,6 +93,15 @@ public class Talker {
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Shit went wrong sending yo' message");
+		}
+	}
+	
+	private void changeNick(String newNick) {
+		try {
+			writer.write("NICK " + newNick);
+			writer.flush();
+		} catch (IOException e) {
+			gui.errorPopup("Error sending nick-change-message. Snap");
 		}
 	}
 	

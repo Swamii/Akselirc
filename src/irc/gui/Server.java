@@ -108,9 +108,9 @@ public class Server {
 		}
 	}
 	
-	public void removeUser(String user, String roomName) {
+	public void removeUser(String user, String roomName, String reason) {
 		Room r = getRoom(roomName);
-		if (r != null) r.removeUser(user);
+		if (r != null) r.removeUser(user, reason);
 	}
 	
 	public synchronized Room getRoom(String name) {

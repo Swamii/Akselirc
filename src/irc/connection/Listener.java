@@ -111,6 +111,8 @@ public class Listener implements Runnable {
 			if (line.contains("VERSION")) {
 				talker.sendVersion(sender);
 			} else if (line.contains("TIME")) {
+			
+			} else if (line.contains("PING")) {
 				
 			} else {
 				server.addPrivChatMessage(sender, message);
@@ -152,7 +154,7 @@ public class Listener implements Runnable {
 		// if a user leaves a channel
 		else if (line.contains(" PART ")) {
 			String channel = line.substring(line.indexOf("#"));
-			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			String name = line.substring(1, line.indexOf("!"));
 			
 			// check if that user is the client
 			if (name.equals(connection.getNick())) {
@@ -160,17 +162,17 @@ public class Listener implements Runnable {
 			}
 			// check all other users leaving
 			else {
-				server.removeUser(name, channel);
+				server.removeUser(name, channel, " has parted");
 			}
 		}
 		
 		// if someone quits the server
 		else if (line.contains(" QUIT ")) {
-			String name = line.substring(line.indexOf(":") + 1, line.indexOf("!"));
+			String name = line.substring(1, line.indexOf("!"));
 			
 			for (int i = 1; i < rooms.size(); i++) {
 				if (rooms.get(i).getUsers().contains(name)) {
-					rooms.get(i).removeUser(name);
+					rooms.get(i).removeUser(name, " has quit");
 				}
 			}
 		}
@@ -187,6 +189,32 @@ public class Listener implements Runnable {
 			String room = line.substring(line.indexOf("#"), line.indexOf(" ", line.indexOf("#")));
 			String topic = line.substring(line.indexOf(":", line.indexOf(room)) + 1);
 			server.getRoom(room).addMOTD(topic);
+		}
+		
+		else if (line.contains(" KICK ")) {
+			String[] info = line.split(" ");
+			String kicker = info[0].substring(1, info[0].indexOf("!"));
+			// 0 = user doing stuff, 1 = action (KICK), 2 = room, 3 = the one kicked, 4 = reason
+			server.removeUser(info[3], info[2], " kicked by " + kicker + ": " + info[4].substring(1));
+		}
+		
+		else if (line.contains(" NICK ")) {
+			String name = line.substring(1, line.indexOf("!"));
+			String newName = line.substring(line.indexOf(":", 5) + 1);
+			
+			for (int i = 1; i < rooms.size(); i++) {
+				if (rooms.get(i).getUsers().contains(name)) {
+					rooms.get(i).changeName(name, newName);
+				}
+			}
+		}
+		
+		else if (line.contains(" MODE ") && line.contains("#")) {
+			if (line.contains("+o") || line.contains("-o") || line.contains("+v") || line.contains("-v")) {
+				String operator = line.substring(1, line.indexOf("!"));
+				String[] roomChangeUser = line.substring(line.indexOf("#")).split(" ");
+				server.getRoom(roomChangeUser[0]).updateName(operator, roomChangeUser[2], roomChangeUser[1]);
+			}
 		}
 		
 	}
