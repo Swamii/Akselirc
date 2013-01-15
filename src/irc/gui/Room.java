@@ -4,9 +4,11 @@ import irc.connection.CleanUserSorter;
 import irc.connection.Connection;
 import irc.connection.Talker;
 import irc.connection.UserSorter;
+import irc.misc.ListAction;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,10 +16,15 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -29,6 +36,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
@@ -101,6 +110,20 @@ public class Room {
 	public void addText(final String text) {
 		final Calendar cal = Calendar.getInstance();
 		final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		if (text.contains("http://") || text.contains("https://")) {
+			int startIndex = text.indexOf("http");
+			int endIndex;
+			
+			/*
+			if (text.contains(" ")) {
+				endIndex = text.indexOf(" ", startIndex);
+			} else {
+				endIndex = text.length() - 1;
+			}
+			
+			System.out.println(text.substring(startIndex, endIndex));
+			*/
+		}
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -216,6 +239,12 @@ public class Room {
 		addMessage(operator + " changed " + name + " (" + change + ")"); 
 	}
 	
+	/**
+	 * if someone changes their name, this gets called
+	 * from the listener.
+	 * @param name The old name
+	 * @param newName The new name
+	 */
 	public void changeName(final String name, final String newName) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -238,9 +267,9 @@ public class Room {
 			userArray[i] = users.get(i);
 			cleanArray[i] = fixName(users.get(i));
 		}
+		usersClean.clear();
 		users.clear();
 		Arrays.sort(cleanArray, cleanSorter);
-		usersClean.clear();
 		for (String s : cleanArray) {
 			usersClean.add(s);
 		}
@@ -250,6 +279,13 @@ public class Room {
 		}
 	}
 	
+	/**
+	 * Returns the next user in the list.
+	 * Used by the KeyListener.
+	 * @param lastWord
+	 * @param switchWord The letters which the user wants to check
+	 * @return
+	 */
 	private String getNext(String lastWord, String switchWord) {
 		int nextIndex = usersClean.indexOf(lastWord) + 1;
 		String nextWord = lastWord;
@@ -269,8 +305,27 @@ public class Room {
 		context = new StyleContext();
 		document = new DefaultStyledDocument(context);
 		style = context.getStyle(StyleContext.DEFAULT_STYLE);
-		
+
+		final Desktop desktop = Desktop.getDesktop();
 		chatWindow = new JTextPane(document);
+		chatWindow.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (HyperlinkEvent.EventType.ACTIVATED.equals(e.getEventType())) {
+					try {
+						System.out.println(e.getURL());
+						chatWindow.setPage(e.getURL());
+						try {
+							desktop.browse(new URI(e.getURL().toString()));
+						} catch (URISyntaxException ex) {
+							ex.printStackTrace();
+						}
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+
+				}
+			}
+		});
 		chatWindow.setEditable(false);
 		
 		topicText = new JTextArea();
@@ -339,6 +394,7 @@ public class Room {
 				userText.setText("");
 			}
 		});
+		// disable the tab-key for this field to make sure we can use it to tab through users
 		userText.setFocusTraversalKeysEnabled(false);
 		
 	}

@@ -2,6 +2,7 @@ package irc.gui;
 
 import irc.connection.Connection;
 import irc.connection.Talker;
+import irc.misc.ButtonTabComponent;
 
 import java.awt.GridLayout;
 import java.lang.reflect.InvocationTargetException;

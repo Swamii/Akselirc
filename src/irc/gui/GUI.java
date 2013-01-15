@@ -1,7 +1,8 @@
 package irc.gui;
 
 import irc.connection.Connection;
-import irc.connection.OSXAdapter;
+import irc.misc.ButtonTabComponent;
+import irc.misc.OSXAdapter;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -138,11 +139,15 @@ public class GUI extends JFrame {
 	}
 	
 	// start connection to server
-	public void newConnection(String[] details) {
+	public void newConnection(final String[] details) {
 		assert (details.length == 2); // i just wanted to use assert
-		Connection connection = new Connection(details[0], details[1], "");
-		Thread t = new Thread(connection, connection.getServerName());
-		t.start();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				Connection connection = new Connection(details[0], details[1], "");
+				Thread t = new Thread(connection, connection.getServerName());
+				t.start();			
+			}
+		});
 	}
 	
 	// called by connection when a connection to a server has been established
@@ -266,8 +271,8 @@ public class GUI extends JFrame {
 	}
 	
 	private void showClient() {
-		gui.setVisible(false);
-		gui.setVisible(true);
+		setVisible(false);
+		setVisible(true);
 	}
 	
 	private void setLAF() {
