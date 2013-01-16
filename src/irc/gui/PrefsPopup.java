@@ -49,8 +49,8 @@ public class PrefsPopup extends JDialog {
 	}
 	
 	private void initGUI() {
-		colorPanel = new JPanel();
-		soundPanel = new JPanel();
+		//colorPanel = new JPanel();
+		//soundPanel = new JPanel();
 		buttonListener = new ButtonListener();
 		// startupPanel ->
 		startupPanel = new JPanel(new BorderLayout());
@@ -101,8 +101,8 @@ public class PrefsPopup extends JDialog {
 		jtp.setTabPlacement(JTabbedPane.LEFT);
 		jtp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		jtp.addTab("Startup", startupPanel);
-		jtp.addTab("Sound", soundPanel);
-		jtp.addTab("Colors", colorPanel);
+		//jtp.addTab("Sound", soundPanel);
+		//jtp.addTab("Colors", colorPanel);
 		tabbedPanePanel.add(jtp, BorderLayout.CENTER);
 		return tabbedPanePanel;
 	}
