@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.prefs.BackingStoreException;
@@ -271,8 +272,10 @@ public class GUI extends JFrame {
 	}
 	
 	private void showClient() {
-		setVisible(false);
-		setVisible(true);
+		setAlwaysOnTop(true);
+		toFront();
+		requestFocus();
+		setAlwaysOnTop(false);
 	}
 	
 	private void setLAF() {
@@ -311,7 +314,7 @@ public class GUI extends JFrame {
 		}
 		
 		final PopupMenu popup = new PopupMenu();
-		Image image = new ImageIcon("AkselircIcon.gif", "System Tray Icon").getImage();
+		Image image = new ImageIcon(getResourceURL("AkselircIcon.gif"), "System Tray Icon").getImage();
 		if (image == null) {
 			System.out.println("Image is null");
 			return;
@@ -341,6 +344,7 @@ public class GUI extends JFrame {
 		aboutItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(frame, "Akselirc " + version + "\nA mediocre IRC client made with nerd love.");
+				showClient();
 			}
 		});
 		
@@ -357,6 +361,10 @@ public class GUI extends JFrame {
 		});
 		
 	}
+	
+	private URL getResourceURL(String fileName){
+		return this.getClass().getResource("resources/" + fileName);
+    }
 
 	private void setupMacStuff() {
 		// setting up important shortcuts like cmd-c-v-x-a, since Nimbus doesn't support it :'(

@@ -27,6 +27,13 @@ Saker att göra:
 	
 	AUTH
 
+Moore:
+	1. En lista med alla tillgänliga "rooms" som uppdateras dynamiskt och informerar om invate krävs. 
+	2. Smileys 
+	3. Instruktioner för förstagångs användare. 
+	4. Möjlighet att få en egna inlägg i annan färg. 
+	5. Basic html-taggar för att kunna styla sin text.
+
 Hmmmm:
 	Thread.join()
 	Fixa en bättre stop() för trådarna.

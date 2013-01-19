@@ -40,7 +40,7 @@ och skapar en popup med lösenord. Om man skriver in lösenord så försöker de
 
 13 Dec: 
 Problemet att swing inte vill rita upp fler saker samtidigt återkommer. Har fått lägga till invokeLater() på flera ställen i koden.
-Har arbetat med att kunna visa upp MOTD (Message of the Day) som alla större irc-kanaler har. Har även jobbat med talkern så att man
+Har arbetat med att kunna visa upp Topic som alla större irc-kanaler har. Har även jobbat med talkern så att man
 kan skriva något mer kommando och så att dom redan existerande fungerar bättre.
 
 7 Jan:
@@ -49,3 +49,9 @@ Lagt till timestamps i rummen, så man ser när folk skrev något. Det finns pri
 skriva 'pe'-tab och få fram 'pelle' om han är först i listan. En enkel implementation där man inte kan tabba genom alla namn utan bara får
 det första i listan. Gjort en större omstrukturering i koden. All information om rum har flyttats från Connection till Server-klassen.
 Allmänna buggfixar.
+
+17 Jan:
+Har mestadels arbetat på mac-integration sedan sist. Nimbus stöder inte cmd-c m.m, har fått lägga till det manuellt.
+Har också sett till att menubaren åker upp i toppen som det brukar vara på mac-appar, samt att cmd-q stänger programmet på korrekt sätt.
+Har även fixat en taskbar-ikon som ska fungera till båda mac och windows. Därifrån kan man se att programmet är igång och så kan man
+stänga det därifrån också.

@@ -38,6 +38,7 @@ public class Connection implements Runnable {
 	private String startupRooms;
 	private Connection connection;
 	private Room serverTalk;
+	private Integer port = 6667;
 
 	public Connection(String nick, String serverName, String rooms) {
 		this.nick = nick;
@@ -46,7 +47,11 @@ public class Connection implements Runnable {
 		gui = GUI.gui;
 	}
 	
-	
+	public Connection(String nick, String serverName, String rooms, Integer port) {
+		this(nick, serverName, rooms);
+		this.port = port;
+		
+	}
 	
 	public void run() {
 		// add this connection to the array, so the gui can keep track of it

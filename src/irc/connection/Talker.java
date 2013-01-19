@@ -62,7 +62,8 @@ public class Talker {
 			writer.write("JOIN " + room + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Shit went wrong trying to join a room! :)");
+			gui.errorPopup("Shit went wrong trying to join a room! :)\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 	}
 	
@@ -71,7 +72,8 @@ public class Talker {
 			writer.write("PART " + name + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Shit went wrong trying to leave the room");
+			gui.errorPopup("Shit went wrong trying to leave the room.\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 		connection.getServer().removeRoom(name);
 	}
@@ -92,7 +94,8 @@ public class Talker {
 			writer.write("PRIVMSG " + room + " :" + message + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Shit went wrong sending yo' message");
+			gui.errorPopup("Shit went wrong sending yo' message.\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 	}
 	
@@ -101,7 +104,8 @@ public class Talker {
 			writer.write("NICK " + newNick);
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Error sending nick-change-message. Snap");
+			gui.errorPopup("Error sending nick-change-message. Snap.\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 	}
 	
@@ -111,7 +115,8 @@ public class Talker {
 			writer.write("PONG " + line.substring(5) + "\r\n");
 			writer.flush();
 		} catch (IOException e1) {
-			gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(");
+			gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(.\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 	}
 	
@@ -121,7 +126,8 @@ public class Talker {
 			System.out.println("Telling server im leaving");
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Shit went wrong trying to leave the server");
+			gui.errorPopup("Shit went wrong trying to leave the server.\nClosing connection...");
+			gui.removeConnection(connection);
 		}
 	}
 	
@@ -134,6 +140,7 @@ public class Talker {
 			writer.flush();
 		} catch (IOException e) {
 			System.err.println("VERSION went wrong.");
+			gui.removeConnection(connection);
 		}
 	}
 	
