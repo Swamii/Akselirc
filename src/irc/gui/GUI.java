@@ -80,6 +80,7 @@ public class GUI extends JFrame {
 		}
 	}
 	
+	// loads the connections and rooms from Preferences
 	public ArrayList<String[]> loadStartupPrefs() {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		ArrayList<String[]> prefsList = new ArrayList<String[]>();
@@ -124,7 +125,6 @@ public class GUI extends JFrame {
 		
 		for (final String[] list : prefsList) {
 			SwingUtilities.invokeLater(new Runnable() {
-				@Override
 				public void run() {
 					Connection connection = new Connection(list[1], list[0], list[2]);
 					Thread t = new Thread(connection, connection.getServerName());
@@ -146,7 +146,7 @@ public class GUI extends JFrame {
 			public void run() {
 				Connection connection = new Connection(details[0], details[1], "");
 				Thread t = new Thread(connection, connection.getServerName());
-				t.start();			
+				t.start();		
 			}
 		});
 	}
@@ -155,7 +155,6 @@ public class GUI extends JFrame {
 	
 	public void addServer(final Server server) {
 		SwingUtilities.invokeLater(new Runnable() {
-			@Override
 			public void run() {
 				jtp.add(server.getName(), server.getPanel());
 				jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
@@ -179,7 +178,6 @@ public class GUI extends JFrame {
 	// the client tried to join requires a password.
 	public void pwdPopup(final String room, final Connection connection) {
 		SwingUtilities.invokeLater(new Runnable() {
-			@Override
 			public void run() {
 				String pwd = (String) JOptionPane.showInputDialog(connection.getServer().getPanel(), 
 						room + " (" + connection.getServerName() + ")" + " requires a password. " +
@@ -195,7 +193,6 @@ public class GUI extends JFrame {
 	// simple error popup
 	public void errorPopup(final String error) {
 		SwingUtilities.invokeLater(new Runnable() {
-			@Override
 			public void run() {
 				JOptionPane.showMessageDialog(frame,
 					    error,
