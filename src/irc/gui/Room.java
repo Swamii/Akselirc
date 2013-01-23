@@ -387,11 +387,14 @@ public class Room {
 		userText.addKeyListener(buttonListener);
 		userText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				talker.handleMessage(event.getActionCommand(), name);
-				if (!event.getActionCommand().startsWith("/")) {
-					addText(connection.getNick() + ": " + event.getActionCommand());
+				String text = event.getActionCommand();
+				if (text.trim().length() > 0) {
+					talker.handleMessage(text, name);
+					if (!text.startsWith("/")) {
+						addText(connection.getNick() + ": " + text);
+					}
+					userText.setText("");
 				}
-				userText.setText("");
 			}
 		});
 		// disable the tab-key for this field to make sure we can use it to tab through users

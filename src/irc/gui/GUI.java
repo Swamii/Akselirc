@@ -38,9 +38,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.MenuBarUI;
 import javax.swing.text.DefaultEditorKit;
 
-import com.apple.eawt.AppEventListener;
-import com.apple.eawt.Application;
-
 public class GUI extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
@@ -129,7 +126,6 @@ public class GUI extends JFrame {
 					Connection connection = new Connection(list[1], list[0], list[2]);
 					Thread t = new Thread(connection, connection.getServerName());
 					t.start();
-					
 				}
 			});
 		}
@@ -401,7 +397,7 @@ public class GUI extends JFrame {
 	}
 
 	// when the program is quitting
-	public void quit() {
+	public synchronized void quit() {
 		setVisible(false);
 		if (tray != null) {
 			tray.remove(trayIcon);
