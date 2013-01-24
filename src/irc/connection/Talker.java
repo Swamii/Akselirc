@@ -1,25 +1,26 @@
 package irc.connection;
 
 import irc.gui.GUI;
-import irc.gui.Server;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+
+/**
+ * This class talks to the server.
+ * And parses /-commands
+ * @author Akseli
+ *
+ */
 public class Talker {
 	
 	private Connection connection;
 	private BufferedWriter writer;
-	private Server server;
 	private GUI gui;
 
 	public Talker(Connection connection) {
 		this.connection = connection;
-		server = connection.getServer();
 		writer = connection.getWriter();
-		if (writer == null) {
-			System.err.println("IS NULL!!");
-		}
 		gui = GUI.gui;
 	}
 

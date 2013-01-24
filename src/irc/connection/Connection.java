@@ -13,7 +13,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.ArrayList;
 
 import javax.swing.SwingUtilities;
 
@@ -38,38 +37,40 @@ public class Connection implements Runnable {
 	private String startupRooms;
 	private Connection connection;
 	private Room serverTalk;
-	private Integer port = 6667;
+    private final int port = 6667;
+    private Thread thread;
 
-	public Connection(String nick, String serverName, String rooms) {
+	public Connection(String serverName, String nick, String rooms) {
 		this.nick = nick;
 		this.serverName = serverName;
 		startupRooms = rooms;
 		gui = GUI.gui;
 	}
 	
-	public Connection(String nick, String serverName, String rooms, Integer port) {
-		this(nick, serverName, rooms);
-		this.port = port;
-		
+	public void start() {
+		thread = new Thread(this);
+		thread.start();
+	}
+	
+	public void exit() {
+		thread.interrupt();
+		gui.removeConnection(this);
 	}
 	
 	public void run() {
 		// add this connection to the array, so the gui can keep track of it
-		gui.addConnection(this);
 		socket = new Socket();
-		SocketAddress socketAddress = new InetSocketAddress(serverName, 6667);
+		SocketAddress socketAddress = new InetSocketAddress(serverName, port);
 		
 		connection = this;
 		
 		// this is a 5-sec timer. if a connections hasn't been made in that time, skip it.
 		new java.util.Timer().schedule(
 		        new java.util.TimerTask() {
-		            @Override
 		            public void run() {
 		                if (!socket.isConnected()) {
-		        			gui.removeConnection(connection);
+		        			exit();
 		        			gui.errorPopup("Connection timed out to: " + serverName);
-		        			return;
 		                }
 		            }
 		        }, 5000);
@@ -79,16 +80,8 @@ public class Connection implements Runnable {
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		} catch (IOException e) {
-			return;
-		}
-		
-		if (!socket.isConnected()) {
-			try {
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return;
+			exit();
+			gui.errorPopup("Connection to " + serverName + " failed to initialize ");
 		}
 		
 		// tell the server what nick and name we want.
@@ -97,7 +90,8 @@ public class Connection implements Runnable {
 			writer.write("USER " + nick + " 8 * : " + nick + "\r\n");
 			writer.flush();
 		} catch (IOException e) {
-			e.printStackTrace();
+			exit();
+			gui.errorPopup("Error writing to server\nClosing connection...");
 		}
 		
 		init();
@@ -105,7 +99,6 @@ public class Connection implements Runnable {
 		serverTalk = server.getRooms().get(0);
 		String line;
 		try {
-			// read lines from server and respond accordingly
 			while ((line = reader.readLine()) != null) {
 				serverTalk.addText(line);
 				if (line.startsWith("PING ")) {
@@ -114,6 +107,7 @@ public class Connection implements Runnable {
 						writer.write("PONG " + line.substring(5) + "\r\n");
 						writer.flush();
 					} catch (IOException e1) {
+						exit();
 						gui.errorPopup("Wuut.. Couldn't send a pong to the server :'(");
 					}
 				}
@@ -123,14 +117,14 @@ public class Connection implements Runnable {
 					startListener();
 					break;
 				} else if (line.indexOf("433") >= 0) {
+					exit();
 					gui.errorPopup("Nickname is already in use on: " + serverName);
-					gui.removeConnection(this);
 					break;
 				}
 			}
 		} catch (IOException e) {
+			exit();
 			gui.errorPopup("Something happened and its not good.");
-			gui.removeConnection(this);
 		}
 		
 	}
@@ -180,10 +174,6 @@ public class Connection implements Runnable {
 				talker.joinRoom(startupRooms);
 			}
 		}
-	}
-	
-	public void closeCrap() {
-		listener.stop();
 	}
 	
 	public boolean allGood() {

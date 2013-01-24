@@ -30,12 +30,13 @@ public class ServerPopup extends JDialog {
 	
 	public ServerPopup() {
 		gui = GUI.gui;
-		details = new String[2];
+		details = new String[3];
 		keyListener = new ServerFieldListener();
 		mouseListener = new ServerButtonListener();
 		initGUI();
 	}
 	
+	// creating the class through this method makes sure there is only one
 	public static ServerPopup getInstance() {
 		if (ServerPopupInstance == null) {
 			ServerPopupInstance = new ServerPopup();
@@ -112,8 +113,9 @@ public class ServerPopup extends JDialog {
 	}
 	
 	private void connect() {
-		details[0] = nickField.getText();
-		details[1] = serverField.getText();
+		details[0] = serverField.getText();
+		details[1] = nickField.getText();
+		details[2] = "";
 		destroy();
 		gui.newConnection(details);
 	}

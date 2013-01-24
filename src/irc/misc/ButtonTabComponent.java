@@ -32,7 +32,6 @@
 package irc.misc;
 
 import irc.connection.Talker;
-import irc.gui.GUI;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
@@ -113,7 +112,7 @@ public class ButtonTabComponent extends JPanel {
             	// leaving server
             	if (pane.getTitleAt(i).startsWith("irc.")) {
             		talker.leaveServer();
-            		GUI.gui.removeConnection(talker.getConnection());
+            		talker.getConnection().exit();
             	} 
             	
             	// leaving room

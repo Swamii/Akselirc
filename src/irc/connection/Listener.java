@@ -39,13 +39,15 @@ public class Listener implements Runnable {
 	}
 	
 	public synchronized void start() {
-		thread = new Thread(this, connection.getServerName() + " - Listener");
-		thread.start();
+		if (running) {			
+			thread = new Thread(this, connection.getServerName() + " - Listener");
+			thread.start();
+		}
 	}
 	
 	public synchronized void stop() {
+		System.out.println("Stop called");
 		running = false;
-		System.out.println("Stop called! Running = " + running + " - " + connection.getServerName());
 	}
 
 	@Override
@@ -73,11 +75,6 @@ public class Listener implements Runnable {
 			try {
 				socket.close();
 			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}

@@ -32,8 +32,6 @@ public class PrefsPopup extends JDialog {
 	private JPanel tabbedPanePanel;
 	private JPanel startupPanel;
 	private JPanel buttonPanel;
-	private JPanel soundPanel;
-	private JPanel colorPanel;
 	private JPanel tablePanel;
 	private JButton okBtn;
 	private JButton cancelBtn;
@@ -182,7 +180,6 @@ public class PrefsPopup extends JDialog {
 	}
 	
 	private class ButtonListener implements ActionListener {
-		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (e.getActionCommand().equals("Save")) {
 				save();

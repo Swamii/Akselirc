@@ -60,6 +60,12 @@ public class PrefsEditServerPopup extends JDialog {
 		initGUI();
 	}
 	
+	
+	public static PrefsEditServerPopup getInstance() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	private void initGUI() {
 		setResizable(false);
 		setBounds(100, 100, 301, 236);

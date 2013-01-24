@@ -11,13 +11,19 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
+
+/**
+ * The Server class.
+ * Handles all the rooms and private chats
+ * @author Akseli
+ *
+ */
 public class Server {
 	
 	private Connection connection;
 	private String name;
 	private JPanel panel;
 	private JTabbedPane jtp;
-	private Talker talker;
 	private ArrayList<PrivChat> privChats;
 	private ArrayList<Room> rooms;
 

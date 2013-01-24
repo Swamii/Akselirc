@@ -155,7 +155,6 @@ public class RoomPopup extends JDialog {
 	private class RoomFieldListener implements KeyListener {
 		
 		// enables the roomOkButton if all the conditions are met
-		@Override
 		public void keyReleased(KeyEvent e) {
 			String line = roomField.getText();
 			boolean enable = false;
@@ -171,11 +170,9 @@ public class RoomPopup extends JDialog {
 			roomOkButton.setEnabled(enable);
 		}
 		
-		@Override
 		public void keyTyped(KeyEvent e) {
 		}
 		// enables to user to click the enter-button to join instead of having to click
-		@Override
 		public void keyPressed(KeyEvent e) {
 			if (KeyEvent.VK_ENTER == e.getKeyCode() && roomOkButton.isEnabled()) {
 				join();
@@ -187,7 +184,6 @@ public class RoomPopup extends JDialog {
 	private class RoomButtonListener implements MouseListener {
 		
 		// handles the button clicks
-		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getSource() == roomOkButton && roomOkButton.isEnabled()) {
 				// send shit

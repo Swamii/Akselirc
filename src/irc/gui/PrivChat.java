@@ -20,7 +20,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
-public class PrivChat extends Room {
+public class PrivChat {
 	
 	private JPanel panel;
 	private JTextField userText;
@@ -33,8 +33,6 @@ public class PrivChat extends Room {
 	private Connection connection;
 
 	public PrivChat(String name, Connection connection) {
-		super(name, connection);
-		
 		this.name = name;
 		this.connection = connection;
 		talker = connection.getTalker();

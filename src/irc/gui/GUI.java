@@ -130,19 +130,23 @@ public class GUI extends JFrame {
 	// this function starts all the connections to the servers specified in the preferences window
 	public void initStartupConnections() {
 		ArrayList<String[]> prefsList = loadStartupPrefs();
-		System.out.println(prefsList.size());
 
 		for (final String[] list : prefsList) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					Connection connection = new Connection(list[1], list[0], list[2]);
-					Thread t = new Thread(connection, connection.getServerName());
-					t.start();
-				}
-			});
+			newConnection(list);
 		}
 	}
 
+	// start connection to server
+	public synchronized void newConnection(final String[] details) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				Connection connection = new Connection(details[0], details[1], details[2]);
+				connection.start();
+				connections.add(connection);
+			}
+		});
+	}
+	
 	// function for exiting one connection
 	public synchronized void removeConnection(Connection connection) {
 
@@ -201,24 +205,7 @@ public class GUI extends JFrame {
 		
 	}
 	
-	public synchronized void addConnection(Connection connection) {
-		connections.add(connection);
-	}
-	
-	// start connection to server
-	public void newConnection(final String[] details) {
-		assert (details.length == 2); // i just wanted to use assert
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				Connection connection = new Connection(details[0], details[1], "");
-				Thread t = new Thread(connection, connection.getServerName());
-				t.start();		
-			}
-		});
-	}
-	
 	// called by connection when a connection to a server has been established
-	
 	public void addServer(final Server server) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -378,8 +365,9 @@ public class GUI extends JFrame {
 		// add menubar to the top, like other mac-apps
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		try {
-			Class<?> clazz = Class.forName("com.apple.laf.AquaMenuBarUI");
-			menubar.setUI((MenuBarUI) clazz.newInstance());
+			// switch MenuBarUI to Aqua since nimbus' version isn't supported on mac
+			Class<?> c = Class.forName("com.apple.laf.AquaMenuBarUI");
+			menubar.setUI((MenuBarUI) c.newInstance());
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {

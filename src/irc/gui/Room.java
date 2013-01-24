@@ -23,8 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -110,6 +108,7 @@ public class Room {
 	public void addText(final String text) {
 		final Calendar cal = Calendar.getInstance();
 		final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		/* Failed attempt to make links clickable
 		if (text.contains("http://") || text.contains("https://")) {
 			int startIndex = text.indexOf("http");
 			int endIndex;
@@ -122,8 +121,8 @@ public class Room {
 			}
 			
 			System.out.println(text.substring(startIndex, endIndex));
-			*/
 		}
+		*/
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
