@@ -203,7 +203,8 @@ public class Listener implements Runnable {
 			String newName = line.substring(line.indexOf(":", 5) + 1);
 			
 			for (int i = 1; i < rooms.size(); i++) {
-				if (rooms.get(i).getUsers().contains(name)) {
+				if (rooms.get(i).userExists(name)) {
+					System.out.println("Changing name");
 					rooms.get(i).changeName(name, newName);
 				}
 			}

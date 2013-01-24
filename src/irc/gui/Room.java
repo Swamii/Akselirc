@@ -171,72 +171,65 @@ public class Room {
 	}
 	
 	// used to add a single user who enters the room
-	public void addUser(final String user) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				users.addElement(user);
-				sort();
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-			}
-		});
+	public synchronized void addUser(final String user) {
+		users.addElement(user);
+		sort();
 		addMessage(user + " has joined " + name);
+		updateList();
 	}
 	
 	// used to add all users when first entering a room
-	public void addAllUsers(final String[] listOfUsers) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				for (String user : listOfUsers) {
-					users.addElement(user);
-				}
-				sort();
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-			}
-		});
-	}
-	
-	public void removeUser(final String user, String reason) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				users.removeElement(user);
-				sort();
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
-			}
-		});
-		addMessage(user + reason);
+	public synchronized void addAllUsers(final String[] listOfUsers) {
+		for (String user : listOfUsers) {
+			users.addElement(user);
+		}
+		sort();
+		updateList();
 	}
 
-	// when the users MODE gets changed (i.e user given op status or voice)
-	public void updateName(String operator, final String name, final String change) {
-		
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
+	public synchronized void removeUser(final String user, String reason) {
+		users.removeElement(user);
+		sort();
+		addMessage(user + reason);
+		updateList();
+	}
+
+	// when the users MODE gets changed (i.e user given op status or voice), too many ifs :(
+	public synchronized void updateName(String operator, final String name, final String change) {
+		switch (change) {
+		case "+o":
+			if (users.contains(name)) {
 				users.removeElement(name);
-				switch (change) {
-				case "+o":
-					users.addElement("@" + name);
-					break;
-				case "+v":
-					users.addElement("+" + name);
-					break;
-				case "-v":
-				case "-o":
-					users.addElement(fixName(name));
-					break;
-				}
-				sort();
-				userWindow.setModel(users);
-				outerUserWindow.revalidate();
-				outerUserWindow.repaint();
+				users.addElement("@" + name);				
 			}
-		});
+			if (users.contains("+" + name)) {
+				users.removeElement("+" + name);
+				users.addElement("@" + name);
+			}
+			break;
+		case "+v":
+			if (users.contains(name)) {
+				users.removeElement(name);
+				users.addElement("+" + name);				
+			}
+			break;
+		case "-v":
+			if (users.contains("+" + name)) {
+				users.removeElement("+" + name);
+				users.addElement(fixName(name));				
+			}
+			break;
+		case "-o":
+			if (users.contains("@" + name)) {
+				users.removeElement("@" + name);
+				users.addElement(fixName(name));				
+			}
+			break;
+		}
+		
+		sort();
 		addMessage(operator + " changed " + name + " (" + change + ")"); 
+		updateList();
 	}
 	
 	/**
@@ -245,21 +238,46 @@ public class Room {
 	 * @param name The old name
 	 * @param newName The new name
 	 */
-	public void changeName(final String name, final String newName) {
+	public synchronized void changeName(String name, String newName) {
+		String status = "";
+		if (!users.contains(name)) {
+			if (users.contains("@" + name)) {
+				status = "@";
+			}
+			if (users.contains("+" + name)) {
+				status = "+";
+			}
+		}
+		users.removeElement(status + name);
+		users.addElement(status + newName);
+		sort();
+		addMessage(fixName(name) + " changed his name to " + fixName(newName));
+		updateList();
+	}
+	
+	public void updateList() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				users.removeElement(name);
-				users.addElement(newName);
-				sort();
 				userWindow.setModel(users);
 				outerUserWindow.revalidate();
 				outerUserWindow.repaint();
 			}
 		});
-		addMessage(name + " changed his name to " + newName);
 	}
 
-	// better sorting function
+	public synchronized boolean userExists(String user) {
+		boolean exists = false;
+		if (usersClean.contains(user)) {
+			exists = true;
+		}
+		return exists;
+	}
+
+	/**
+	 * Better sorting function
+	 * One array is for names as they appear in the JList
+	 * The other is for clean names (without @ and +)
+	 */
 	private void sort() {
 		String[] userArray = new String[users.size()];
 		String[] cleanArray = new String[users.size()];
@@ -452,6 +470,7 @@ public class Room {
 		return users;
 	}
 	
+	
 	/**
 	 * This class handles the tab-completion feature
 	 * when you quickly want to type a name you can 
@@ -488,10 +507,10 @@ public class Room {
 					}
 					System.out.println(switchWord + ", " + lastWord);
 					userText.setText(allButLastWord + getNext(lastWord, switchWord));
-				} 
+				}
+				
 				// if you have a incomplete name typed
 				else {
-
 					switchWord = lastWord;
 					
 					for (int i = 0; i < usersClean.size(); i++) {

@@ -17,6 +17,9 @@ public class Talker {
 		this.connection = connection;
 		server = connection.getServer();
 		writer = connection.getWriter();
+		if (writer == null) {
+			System.err.println("IS NULL!!");
+		}
 		gui = GUI.gui;
 	}
 
@@ -53,8 +56,19 @@ public class Talker {
 		
 		else if (command.equals("NICK")) {
 			changeNick(item);
+			getNames(senderRoom);
 		}
 
+	}
+	
+	public void getNames(String room) {
+		try {
+			writer.write("NAMES " + room + "\r\n");
+			writer.flush();
+		} catch (IOException e) {
+			gui.errorPopup("Tried to get names. Failed :(\nClosing connection...");
+			gui.removeConnection(connection);
+		}
 	}
 
 	public void joinRoom(String room) {
@@ -101,7 +115,8 @@ public class Talker {
 	
 	private void changeNick(String newNick) {
 		try {
-			writer.write("NICK " + newNick);
+			writer.write("NICK " + newNick + "\r\n");
+			System.out.println("Sending nick!");
 			writer.flush();
 		} catch (IOException e) {
 			gui.errorPopup("Error sending nick-change-message. Snap.\nClosing connection...");
@@ -126,11 +141,11 @@ public class Talker {
 			System.out.println("Telling server im leaving");
 			writer.flush();
 		} catch (IOException e) {
-			gui.errorPopup("Shit went wrong trying to leave the server.\nClosing connection...");
-			gui.removeConnection(connection);
+			System.err.println("IOException leaving server: " + e.getMessage());
 		}
 	}
 	
+	// this doesn't work, haven't figured out ctcp
 	public void sendVersion(String nick) {
 		try {
 			//Lazors CTCP REPLY VERSION irssi v0.8.15 - running on Darwin x86_64

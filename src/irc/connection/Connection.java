@@ -131,7 +131,6 @@ public class Connection implements Runnable {
 		} catch (IOException e) {
 			gui.errorPopup("Something happened and its not good.");
 			gui.removeConnection(this);
-			return;
 		}
 		
 	}
@@ -164,11 +163,11 @@ public class Connection implements Runnable {
 	private void startListener() {
 		
 		gui.enableJoinRoomMenuItem(true);
-		checkPreConfRooms();
 		allGood = true;
 		
 		listener.start();
 
+		checkPreConfRooms();
 	}
 	
 	private void checkPreConfRooms() {

@@ -38,6 +38,12 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.MenuBarUI;
 import javax.swing.text.DefaultEditorKit;
 
+/**
+ * Main GUI-class
+ * CONTROLS EVERYTHING
+ * @author Swami
+ *
+ */
 public class GUI extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
@@ -54,150 +60,7 @@ public class GUI extends JFrame {
 	private String version = "v0.2";
 	private SystemTray tray;
 	private TrayIcon trayIcon;
-
-
-	// function for exiting one connection
-	public synchronized void removeConnection(Connection connection) {
-
-		if (connection.getListener() != null) {
-			connection.getListener().stop();
-		}
-		
-		for (int i = 0; i < jtp.getTabCount(); i++) {
-			if (jtp.getTitleAt(i).equals(connection.getServerName())) {
-				jtp.remove(i);
-			}
-		}
-		connections.remove(connection);
-		
-		System.out.println("# of connections " + connections.size());
-		if (connections.size() == 0) {
-			// if there are no connections left you can't join a room
-			enableJoinRoomMenuItem(false);
-		}
-	}
 	
-	// loads the connections and rooms from Preferences
-	public ArrayList<String[]> loadStartupPrefs() {
-		Preferences prefs = Preferences.userNodeForPackage(getClass());
-		ArrayList<String[]> prefsList = new ArrayList<String[]>();
-        ArrayList<String> keys = new ArrayList<String>();
-        ArrayList<String> allKeys;
-		try {
-			allKeys = new ArrayList<String>(Arrays.asList(prefs.keys()));
-			// allKeys we have all the preferences, but the only ones we need are those related to startup-connections
-	        for (String k : allKeys) {
-	        	if (k.startsWith("irc.")) {
-	        		keys.add(k);
-	        	}
-	        }
-	        for (int i = 0; i < keys.size(); i++) {
-	        	String[] tempList = new String[3];
-	        	tempList[0] = keys.get(i);
-	        	String nickRoom = prefs.get(keys.get(i), "err");
-	        	if (!nickRoom.equals("err") && nickRoom.contains(":")) {
-	        		if (nickRoom.endsWith(":")) {
-	        			tempList[1] = nickRoom.substring(0, nickRoom.length() - 1);
-	        			tempList[2] = "";
-	        		} else {
-	        			String[] nickRoomSplit = nickRoom.split(":");
-	            		tempList[1] = nickRoomSplit[0];
-	            		tempList[2] = nickRoomSplit[1];
-	        		}
-	        		
-	        	}
-	        	prefsList.add(tempList);
-	        }
-		} catch (BackingStoreException e) {
-			errorPopup("Failed to load preferences. Error code 1337.");
-		}
-		return prefsList;
-		
-	}
-	
-	// this function starts all the connections to the servers specified in the preferences window
-	public void initStartupConnections() {
-		ArrayList<String[]> prefsList = loadStartupPrefs();
-		System.out.println(prefsList.size());
-		
-		for (final String[] list : prefsList) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					Connection connection = new Connection(list[1], list[0], list[2]);
-					Thread t = new Thread(connection, connection.getServerName());
-					t.start();
-				}
-			});
-		}
-	}
-	
-	public synchronized void addConnection(Connection connection) {
-		connections.add(connection);
-	}
-	
-	// start connection to server
-	public void newConnection(final String[] details) {
-		assert (details.length == 2); // i just wanted to use assert
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				Connection connection = new Connection(details[0], details[1], "");
-				Thread t = new Thread(connection, connection.getServerName());
-				t.start();		
-			}
-		});
-	}
-	
-	// called by connection when a connection to a server has been established
-	
-	public void addServer(final Server server) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				jtp.add(server.getName(), server.getPanel());
-				jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
-			}
-		});
-	}
-	
-	private void serverPopup() {
-		ServerPopup serverPopup = ServerPopup.getInstance();
-		serverPopup.setVisible(false);
-		serverPopup.setVisible(true);
-	}
-	
-	private void roomPopup() {
-		RoomPopup roomPopup = RoomPopup.getInstance();
-		roomPopup.setVisible(false);
-		roomPopup.setVisible(true);
-	}
-	
-	// popup-function which gets called if the listener has heard that a room
-	// the client tried to join requires a password.
-	public void pwdPopup(final String room, final Connection connection) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				String pwd = (String) JOptionPane.showInputDialog(connection.getServer().getPanel(), 
-						room + " (" + connection.getServerName() + ")" + " requires a password. " +
-								"Please enter it below.", "Enter password", 
-								JOptionPane.PLAIN_MESSAGE, null, null, null);
-				if (pwd != null && pwd.length() > 0) {
-					connection.getServer().addRoom(room + " " + pwd);
-				}
-			}
-		});
-	}
-
-	// simple error popup
-	public void errorPopup(final String error) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				JOptionPane.showMessageDialog(frame,
-					    error,
-					    "Error",
-					    JOptionPane.ERROR_MESSAGE);
-			}
-		});
-	}
-
 	public void initGUI() {
 		gui = this;
 		
@@ -263,6 +126,147 @@ public class GUI extends JFrame {
 		setVisible(true);
 
 	}
+
+	// this function starts all the connections to the servers specified in the preferences window
+	public void initStartupConnections() {
+		ArrayList<String[]> prefsList = loadStartupPrefs();
+		System.out.println(prefsList.size());
+
+		for (final String[] list : prefsList) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					Connection connection = new Connection(list[1], list[0], list[2]);
+					Thread t = new Thread(connection, connection.getServerName());
+					t.start();
+				}
+			});
+		}
+	}
+
+	// function for exiting one connection
+	public synchronized void removeConnection(Connection connection) {
+
+		if (connection.getListener() != null) {
+			connection.getListener().stop();
+		}
+
+		for (int i = 0; i < jtp.getTabCount(); i++) {
+			if (jtp.getTitleAt(i).equals(connection.getServerName())) {
+				jtp.remove(i);
+			}
+		}
+		connections.remove(connection);
+		
+		// if there are no connections left you can't join a room
+		if (connections.size() == 0) {
+			enableJoinRoomMenuItem(false);
+		}
+	}
+	
+	// loads the connections and rooms from Preferences
+	public ArrayList<String[]> loadStartupPrefs() {
+		Preferences prefs = Preferences.userNodeForPackage(getClass());
+		ArrayList<String[]> prefsList = new ArrayList<String[]>();
+        ArrayList<String> keys = new ArrayList<String>();
+        ArrayList<String> allKeys;
+		try {
+			allKeys = new ArrayList<String>(Arrays.asList(prefs.keys()));
+			// allKeys we have all the preferences, but the only ones we need are those related to startup-connections
+	        for (String k : allKeys) {
+	        	if (k.startsWith("irc.")) {
+	        		keys.add(k);
+	        	}
+	        }
+	        for (int i = 0; i < keys.size(); i++) {
+	        	String[] tempList = new String[3];
+	        	tempList[0] = keys.get(i);
+	        	String nickRoom = prefs.get(keys.get(i), "err");
+	        	if (!nickRoom.equals("err") && nickRoom.contains(":")) {
+	        		if (nickRoom.endsWith(":")) {
+	        			tempList[1] = nickRoom.substring(0, nickRoom.length() - 1);
+	        			tempList[2] = "";
+	        		} else {
+	        			String[] nickRoomSplit = nickRoom.split(":");
+	            		tempList[1] = nickRoomSplit[0];
+	            		tempList[2] = nickRoomSplit[1];
+	        		}
+	        		
+	        	}
+	        	prefsList.add(tempList);
+	        }
+		} catch (BackingStoreException e) {
+			errorPopup("Failed to load preferences. Error code 1337.");
+		}
+		return prefsList;
+		
+	}
+	
+	public synchronized void addConnection(Connection connection) {
+		connections.add(connection);
+	}
+	
+	// start connection to server
+	public void newConnection(final String[] details) {
+		assert (details.length == 2); // i just wanted to use assert
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				Connection connection = new Connection(details[0], details[1], "");
+				Thread t = new Thread(connection, connection.getServerName());
+				t.start();		
+			}
+		});
+	}
+	
+	// called by connection when a connection to a server has been established
+	
+	public void addServer(final Server server) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				jtp.add(server.getName(), server.getPanel());
+				jtp.setTabComponentAt(jtp.getTabCount() - 1, new ButtonTabComponent(jtp, server.getTalker()));
+			}
+		});
+	}
+	
+	private void serverPopup() {
+		ServerPopup serverPopup = ServerPopup.getInstance();
+		serverPopup.setVisible(false);
+		serverPopup.setVisible(true);
+	}
+	
+	private void roomPopup() {
+		RoomPopup roomPopup = RoomPopup.getInstance();
+		roomPopup.setVisible(false);
+		roomPopup.setVisible(true);
+	}
+	
+	// popup-function which gets called if the listener has heard that a room
+	// the client tried to join requires a password.
+	public void pwdPopup(final String room, final Connection connection) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				String pwd = (String) JOptionPane.showInputDialog(connection.getServer().getPanel(), 
+						room + " (" + connection.getServerName() + ")" + " requires a password. " +
+								"Please enter it below.", "Enter password", 
+								JOptionPane.PLAIN_MESSAGE, null, null, null);
+				if (pwd != null && pwd.length() > 0) {
+					connection.getTalker().joinRoom(room + " " + pwd);
+				}
+			}
+		});
+	}
+
+	// simple error popup
+	public void errorPopup(final String error) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				JOptionPane.showMessageDialog(frame,
+					    error,
+					    "Error",
+					    JOptionPane.ERROR_MESSAGE);
+			}
+		});
+	}
 	
 	private void showClient() {
 		setAlwaysOnTop(true);
@@ -271,8 +275,8 @@ public class GUI extends JFrame {
 		setAlwaysOnTop(false);
 	}
 	
+	// set look and feel to nimbus, if it doesn't exist, go with standard crossplatform
 	private void setLAF() {
-		// set look and feel to nimbus, if it doesn't exist, go with standard crossplatform
 		try {
 			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 				if ("Nimbus".equals(info.getName())) {
@@ -291,7 +295,6 @@ public class GUI extends JFrame {
 			}
 		}
 		if (System.getProperty("os.name").equals("Mac OS X")) {
-			System.out.println("yes mac!");
 			setupMacStuff();
 		}
 	}
@@ -384,8 +387,8 @@ public class GUI extends JFrame {
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		}
-		// http://stackoverflow.com/questions/2061194/swing-on-osx-how-to-trap-command-q
 
+		// set default action for mac's own exit
 		try {
 			OSXAdapter.setQuitHandler(this, getClass().getDeclaredMethod("quit", (Class[])null));
 		} catch (NoSuchMethodException e) {
@@ -403,7 +406,7 @@ public class GUI extends JFrame {
 			tray.remove(trayIcon);
 		}
  		for (int i = 0; i < connections.size(); i++) {
-			if (connections.get(i).allGood()) {
+			if (connections.get(i).getListener() != null) {
 				connections.get(i).getTalker().leaveServer();
 				connections.get(i).getListener().stop();
 			}
